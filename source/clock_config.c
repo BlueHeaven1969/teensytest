@@ -81,7 +81,6 @@ static void CLOCK_CONFIG_SetFllExtRefDiv(uint8_t frdiv)
  ******************************************************************************/
 void BOARD_InitBootClocks(void)
 {
-    BOARD_BootClockRUN();
 }
 
 /*******************************************************************************
@@ -98,7 +97,7 @@ outputs:
 - {id: FlexBus_clock.outFreq, value: 60 MHz}
 - {id: LPO_clock.outFreq, value: 1 kHz}
 - {id: MCGFFCLK.outFreq, value: 500 kHz}
-- {id: MCGIRCLK.outFreq, value: 32.768 kHz}
+- {id: MCGIRCLK.outFreq, value: 4 MHz}
 - {id: OSCERCLK.outFreq, value: 16 MHz}
 - {id: OSCERCLK_UNDIV.outFreq, value: 16 MHz}
 - {id: PLLFLLCLK.outFreq, value: 180 MHz}
@@ -108,6 +107,7 @@ settings:
 - {id: powerMode, value: HSRUN}
 - {id: MCG.FCRDIV.scale, value: '1', locked: true}
 - {id: MCG.FRDIV.scale, value: '32'}
+- {id: MCG.IRCS.sel, value: MCG.FCRDIV}
 - {id: MCG.IREFS.sel, value: MCG.FRDIV}
 - {id: MCG.PLLS.sel, value: MCG.PLLCS}
 - {id: MCG.PRDIV.scale, value: '2', locked: true}
@@ -119,7 +119,7 @@ settings:
 - {id: MCG_C2_RANGE0_FRDIV_CFG, value: Very_high}
 - {id: OSC_CR_ERCLKEN_CFG, value: Enabled}
 - {id: OSC_CR_ERCLKEN_UNDIV_CFG, value: Enabled}
-- {id: RTC_CR_CLKO_CFG, value: Disabled}
+- {id: RTC_CR_OSCE_CFG, value: Enabled}
 - {id: SIM.LPUARTSRCSEL.sel, value: OSC.OSCERCLK}
 - {id: SIM.OSC32KSEL.sel, value: RTC.RTC32KCLK}
 - {id: SIM.OUTDIV2.scale, value: '3', locked: true}
@@ -137,7 +137,6 @@ settings:
 - {id: USBPHY.PFD_FRAC_DIV.scale, value: '24', locked: true}
 sources:
 - {id: OSC.OSC.outFreq, value: 16 MHz, enabled: true}
-- {id: RTC.RTC32kHz.outFreq, value: 32.768 kHz, enabled: true}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 
@@ -148,7 +147,7 @@ const mcg_config_t mcgConfig_BOARD_BootClockHSRUN =
     {
         .mcgMode = kMCG_ModePEE,                  /* PEE - PLL Engaged External */
         .irclkEnableMode = kMCG_IrclkEnable | kMCG_IrclkEnableInStop,/* MCGIRCLK enabled as well as in STOP mode */
-        .ircs = kMCG_IrcSlow,                     /* Slow internal reference clock selected */
+        .ircs = kMCG_IrcFast,                     /* Fast internal reference clock selected */
         .fcrdiv = 0x0U,                           /* Fast IRC divider: divided by 1 */
         .frdiv = 0x0U,                            /* FLL reference clock divider: divided by 32 */
         .drs = kMCG_DrsLow,                       /* Low frequency range */
@@ -246,7 +245,7 @@ settings:
 - {id: SIM.OUTDIV4.scale, value: '5'}
 - {id: SIM.PLLFLLSEL.sel, value: IRC48M.IRC48MCLK}
 sources:
-- {id: OSC.OSC.outFreq, value: 12 MHz, enabled: true}
+- {id: OSC.OSC.outFreq, value: 16 MHz, enabled: true}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 
@@ -281,7 +280,7 @@ const sim_clock_config_t simConfig_BOARD_BootClockVLPR =
     };
 const osc_config_t oscConfig_BOARD_BootClockVLPR =
     {
-        .freq = 12000000U,                        /* Oscillator frequency: 12000000Hz */
+        .freq = 16000000U,                        /* Oscillator frequency: 16000000Hz */
         .capLoad = (OSC_CAP0P),                   /* Oscillator capacity load: 0pF */
         .workMode = kOSC_ModeOscLowPower,         /* Oscillator low power */
         .oscerConfig =
@@ -330,7 +329,6 @@ void BOARD_BootClockVLPR(void)
 /* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 !!Configuration
 name: BOARD_BootClockRUN
-called_from_default_init: true
 outputs:
 - {id: Bus_clock.outFreq, value: 60 MHz}
 - {id: Core_clock.outFreq, value: 120 MHz}

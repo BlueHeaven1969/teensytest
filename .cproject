@@ -63,6 +63,8 @@
 									<listOptionValue builtIn="false" value="../source"/>
 									<listOptionValue builtIn="false" value="../SDK/drivers"/>
 									<listOptionValue builtIn="false" value="../SDK/utilities"/>
+									<listOptionValue builtIn="false" value="../SDK/sdmmc"/>
+									<listOptionValue builtIn="false" value="../SDK/fatfs"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.644474294" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>

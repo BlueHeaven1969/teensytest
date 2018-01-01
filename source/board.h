@@ -33,23 +33,14 @@ extern "C" {
 
 // DEFINES =====================================================================
 // This is for the debug UART interface
-#define BOARD_UART0_PORT     PORTB
-#define BOARD_UART0_TX_PIN   17U
-#define BOARD_UART0_RX_PIN   16U
-
-// These are for the onboard SDCARD interface
-#define BOARD_SDHC0_PORT     PORTE
-#define BOARD_SDHC0_CLK_PIN  2U
-#define BOARD_SDHC0_CMD_PIN  3U
-#define BOARD_SDHC0_D0_PIN   1U
-#define BOARD_SDHC0_D1_PIN   0U
-#define BOARD_SDHC0_D2_PIN   4U
-#define BOARD_SDHC0_D3_PIN   5U
+#define BOARD_UART0_PORT          PORTB
+#define BOARD_UART0_TX_PIN        17U
+#define BOARD_UART0_RX_PIN        16U
 
 // LED is on PORTC-05
-#define BOARD_LED_GPIO GPIOC
-#define BOARD_LED_PORT PORTC
-#define BOARD_LED_PIN 5U
+#define BOARD_LED_GPIO            GPIOC
+#define BOARD_LED_PORT            PORTC
+#define BOARD_LED_PIN             5U
 
 // UART0 PARAMETERS
 #define BOARD_DEBUG_UART_BAUDRATE 115200
@@ -60,6 +51,20 @@ extern "C" {
 #define BOARD_DEBUG_UART_CLK_FREQ CLOCK_GetCoreSysClkFreq()
 #define BOARD_UART_IRQ            UART0_RX_TX_IRQn
 #define BOARD_UART_IRQ_HANDLER    UART0_RX_TX_IRQHandler
+#define SOPT5_UART0TXSRC_UART_TX  0x00u
+
+/* SDHC base address, clock and card detection pin */
+#define BOARD_SDHC_BASEADDR       SDHC
+#define BOARD_SDHC_CLKSRC         kCLOCK_CoreSysClk
+#define BOARD_SDHC_CLK_FREQ       CLOCK_GetFreq(kCLOCK_CoreSysClk)
+#define BOARD_SDHC_IRQ            SDHC_IRQn
+// SDHC_CD is PORTC-08
+#define BOARD_SDHC_CD_GPIO        GPIOC
+#define BOARD_SDHC_CD_PORT        PORTC
+#define BOARD_SDHC_CD_PIN         8U
+#define BOARD_SDHC_CD_PORT_IRQ    PORTC_IRQn
+#define BOARD_SDHC_CD_PORT_IRQ_HANDLER PORTC_IRQHandler
+#define BOARD_SDHC_CARD_INSERT_CD_LEVEL (0U)
 
 // PROTOTYPES ==================================================================
 void BOARD_InitPins(void);
