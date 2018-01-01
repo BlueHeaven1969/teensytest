@@ -5,11 +5,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "pin_mux.h"
+#include "hw_config.h"
 #include "clock_config.h"
 #include "fsl_gpio.h"
 #include "fsl_port.h"
-/*#include "fsl_debug_console.h"*/
+#include "fsl_debug_console.h"
+
 
 /* FreeRTOS kernel includes. */
 #include "FreeRTOS.h"
@@ -18,15 +19,23 @@
 #include "timers.h"
 
 
+// DEFINES  ====================================================================
 /* Task priorities. */
-#define hello_task_PRIORITY (configMAX_PRIORITIES - 1)
+#define main_task_PRIORITY (configMAX_PRIORITIES - 1)
 
+// GLOBAL VARIABLES  ===========================================================
+
+
+// PROTOTYPES  =================================================================
+
+// FUNCTIONS  ==================================================================
 /*!
  * @brief Task responsible for printing of "Hello world." message.
  */
-static void hello_task(void *pvParameters) {
+static void main_task(void *handle) {
     const TickType_t Delay = pdMS_TO_TICKS( 500UL );
-    printf("Hello World!!!\r\n");
+
+    PRINTF("Hello World!!!\r\n");
     for (;;)
     {
         GPIO_PortToggle(BOARD_LED_GPIO, 1<<BOARD_LED_PIN);
@@ -39,16 +48,20 @@ static void hello_task(void *pvParameters) {
  */
 int main(void) {
     gpio_pin_config_t led_config = { kGPIO_DigitalOutput, 0 };
+
 	/* Init board hardware. */
 	BOARD_InitPins();
 	BOARD_BootClockRUN();
+	BOARD_InitDebugConsole();
 	//InitPeripherals();
 
-	/* Add your code here */
+	// Init on board LED
 	GPIO_PinInit(BOARD_LED_GPIO, BOARD_LED_PIN, &led_config);
 
 	/* Create RTOS task */
-	xTaskCreate(hello_task, "Hello_task", configMINIMAL_STACK_SIZE, NULL, hello_task_PRIORITY, NULL);
+	xTaskCreate(main_task, "Main_task",
+	            5000L/sizeof(portSTACK_TYPE), NULL, main_task_PRIORITY,
+	            NULL);
 	vTaskStartScheduler();
 
 	for(;;)
@@ -65,31 +78,31 @@ int main(void) {
  * END ****************************************************************************************************************/
 void BOARD_InitPins(void)
 {
-    /* Port C Clock Gate Control: Clock enabled */
+    // Enable port clocks
+    CLOCK_EnableClock(kCLOCK_PortB);
     CLOCK_EnableClock(kCLOCK_PortC);
-    /* Port E Clock Gate Control: Clock enabled */
     CLOCK_EnableClock(kCLOCK_PortE);
 
-    /* PORTC5 (pin D8) is configured as PTC5 */
+    // PORTE9-10 is configured for UART0 RX/TX
+    PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_TX_PIN, kPORT_MuxAlt3);
+    PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_RX_PIN, kPORT_MuxAlt3);
+
+    // PORTC5 (pin D8) is configured as GPIO (LED)
     PORT_SetPinMux(BOARD_LED_PORT, BOARD_LED_PIN, kPORT_MuxAsGpio);
 
-    /* PORTE0 (pin D3) is configured as SDHC0_D1 */
+    // PORTE0-5 configured for SDHC0
     PORT_SetPinMux(BOARD_SDHC0_PORT, BOARD_SDHC0_D1_PIN, kPORT_MuxAlt4);
-
-    /* PORTE1 (pin D2) is configured as SDHC0_D0 */
     PORT_SetPinMux(BOARD_SDHC0_PORT, BOARD_SDHC0_D0_PIN, kPORT_MuxAlt4);
-
-    /* PORTE2 (pin D1) is configured as SDHC0_DCLK */
     PORT_SetPinMux(BOARD_SDHC0_PORT, BOARD_SDHC0_CLK_PIN, kPORT_MuxAlt4);
-
-    /* PORTE3 (pin E4) is configured as SDHC0_CMD */
     PORT_SetPinMux(BOARD_SDHC0_PORT, BOARD_SDHC0_CMD_PIN, kPORT_MuxAlt4);
-
-    /* PORTE4 (pin E3) is configured as SDHC0_D3 */
     PORT_SetPinMux(BOARD_SDHC0_PORT, BOARD_SDHC0_D3_PIN, kPORT_MuxAlt4);
-
-    /* PORTE5 (pin E2) is configured as SDHC0_D2 */
     PORT_SetPinMux(BOARD_SDHC0_PORT, BOARD_SDHC0_D2_PIN, kPORT_MuxAlt4);
+
 }
 
+void BOARD_InitDebugConsole(void)
+{
+    uint32_t uartClkSrcFreq = BOARD_DEBUG_UART_CLK_FREQ;
+    DbgConsole_Init(BOARD_DEBUG_UART_BASEADDR, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, uartClkSrcFreq);
+}
 

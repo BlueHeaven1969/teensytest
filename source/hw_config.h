@@ -3,8 +3,8 @@
  * will be overwritten if the respective MCUXpresso Config Tools is used to update this file.
  **********************************************************************************************************************/
 
-#ifndef _PIN_MUX_H_
-#define _PIN_MUX_H_
+#ifndef _HW_CONFIG_H_
+#define _HW_CONFIG_H_
 
 /***********************************************************************************************************************
  * Definitions
@@ -31,6 +31,12 @@ typedef enum _pin_mux_direction
 extern "C" {
 #endif
 
+// DEFINES =====================================================================
+// This is for the debug UART interface
+#define BOARD_UART0_PORT     PORTB
+#define BOARD_UART0_TX_PIN   17U
+#define BOARD_UART0_RX_PIN   16U
+
 // These are for the onboard SDCARD interface
 #define BOARD_SDHC0_PORT     PORTE
 #define BOARD_SDHC0_CLK_PIN  2U
@@ -45,11 +51,19 @@ extern "C" {
 #define BOARD_LED_PORT PORTC
 #define BOARD_LED_PIN 5U
 
-/*!
- * @brief Configures pin routing and optionally pin electrical features.
- *
- */
+// UART0 PARAMETERS
+#define BOARD_DEBUG_UART_BAUDRATE 115200
+#define BOARD_DEBUG_UART_TYPE     DEBUG_CONSOLE_DEVICE_TYPE_UART
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) UART0
+#define BOARD_DEBUG_UART_INSTANCE 0U
+#define BOARD_DEBUG_UART_CLKSRC   SYS_CLK
+#define BOARD_DEBUG_UART_CLK_FREQ CLOCK_GetCoreSysClkFreq()
+#define BOARD_UART_IRQ            UART0_RX_TX_IRQn
+#define BOARD_UART_IRQ_HANDLER    UART0_RX_TX_IRQHandler
+
+// PROTOTYPES ==================================================================
 void BOARD_InitPins(void);
+void BOARD_InitDebugConsole(void);
 
 #if defined(__cplusplus)
 }
@@ -58,7 +72,7 @@ void BOARD_InitPins(void);
 /*!
  * @}
  */
-#endif /* _PIN_MUX_H_ */
+#endif /* _HW_CONFIG_H_ */
 
 /***********************************************************************************************************************
  * EOF
