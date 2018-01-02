@@ -83,7 +83,7 @@ static void main_task(void *handle) {
     const TCHAR driverNumberBuffer[3U] = {SDDISK + '0', ':', '/'};
     volatile bool failedFlag = false;
     char ch = '0';
-    BYTE work[_MAX_SS];
+    //BYTE work[_MAX_SS];
     const TickType_t Delay = pdMS_TO_TICKS( 500UL );
 
     PRINTF("Hello World!!!\r\n");
@@ -263,13 +263,14 @@ int main(void) {
 
 	/* Init board hardware. */
 	BOARD_InitPins();
-	BOARD_BootClockHSRUN();
+	BOARD_BootClockRUN();
 	BOARD_InitDebugConsole();
-	//SYSMPU_Enable(SYSMPU, false);
+	SYSMPU_Enable(SYSMPU, false);
 
 	// Init on board LED
 	GPIO_PinInit(BOARD_LED_GPIO, BOARD_LED_PIN, &led_config);
-    NVIC_SetPriority(BOARD_SDHC_IRQ, 6U);
+	// This is so FreeRTOS doesn't hang because IRQ priority is too high
+    NVIC_SetPriority(BOARD_SDHC_IRQ, 4U);
 
 	/* Create RTOS task */
 	xTaskCreate(main_task, "Main_task",
@@ -318,7 +319,7 @@ void BOARD_InitPins(void)
                                                     /* Pin Control Register fields [15:0] are not locked */
                                                     kPORT_UnlockRegister};
     /* PORTC8 (pin A8) is configured as GPIO (SDCARD CD) */
-    PORT_SetPinConfig(BOARD_SDHC_CD_PORT, BOARD_SDHC_CD_PIN, &portd10_pinB3_config);
+    PORT_SetPinConfig(BOARD_SDHC_CD_PORT_BASE, BOARD_SDHC_CD_GPIO_PIN, &portd10_pinB3_config);
 
     // PORTE0-5 configured for SDHC0
     const port_pin_config_t porte0_pinD3_config = {/* Internal pull-up resistor is enabled */

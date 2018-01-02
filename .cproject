@@ -124,8 +124,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.922443581.1960787150" name="ccsbcs.c" rcbsApplicability="disable" resourcePath="SDK/fatfs/ccsbcs.c" toolsToInvoke="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1912646891.1756635048">
+						<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1912646891.1756635048" name="Cross ARM GNU C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1912646891"/>
+					</fileInfo>
 					<sourceEntries>
-						<entry excluding="freertos/portable/heap_5.c|freertos/portable/heap_3.c|freertos/portable/heap_2.c|freertos/portable/heap_1.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="SDK/fatfs/ccsbcs.c|SDK/fatfs/cc950.c|SDK/fatfs/cc936.c|SDK/fatfs/cc932.c|freertos/portable/heap_5.c|freertos/portable/heap_3.c|freertos/portable/heap_2.c|freertos/portable/heap_1.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

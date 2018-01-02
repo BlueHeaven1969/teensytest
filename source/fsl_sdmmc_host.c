@@ -32,9 +32,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <board.h>
 #include "fsl_sdmmc_host.h"
 #include "fsl_sdmmc_event.h"
+#include "board.h"
 #include "fsl_port.h"
 #include "fsl_gpio.h"
 /*******************************************************************************
@@ -113,7 +113,7 @@ static volatile bool s_sdInsertedFlag = false;
  ******************************************************************************/
 static void SDMMCHOST_DetectCardByGpio(const sdmmchost_detect_card_t *cd)
 {
-    if (GPIO_ReadPinInput(BOARD_SDHC_CD_GPIO, BOARD_SDHC_CD_PIN) == SDMMCHOST_CARD_INSERT_CD_LEVEL)
+    if (GPIO_ReadPinInput(BOARD_SDHC_CD_GPIO_BASE, BOARD_SDHC_CD_GPIO_PIN) == SDMMCHOST_CARD_INSERT_CD_LEVEL)
     {
         s_sdInsertedFlag = true;
         if (cd && (cd->cardInserted))
@@ -227,7 +227,7 @@ static status_t SDMMCHOST_CardDetectInit(SDMMCHOST_TYPE *base, const sdmmchost_d
     if (cdType == kSDMMCHOST_DetectCardByGpioCD)
     {
         /* Card detection pin will generate interrupt on either eage */
-        PORT_SetPinInterruptConfig(BOARD_SDHC_CD_PORT, BOARD_SDHC_CD_PIN, kPORT_InterruptEitherEdge);
+        PORT_SetPinInterruptConfig(BOARD_SDHC_CD_PORT_BASE, BOARD_SDHC_CD_GPIO_PIN, kPORT_InterruptEitherEdge);
         /* Open card detection pin NVIC. */
         SDMMCHOST_ENABLE_IRQ(SDMMCHOST_CARD_DETECT_IRQ);
         /* set IRQ priority */
@@ -265,12 +265,12 @@ void SDMMCHOST_Delay(uint32_t milliseconds)
 
 void SDMMCHOST_CARD_DETECT_GPIO_INTERRUPT_HANDLER(void)
 {
-    if (PORT_GetPinsInterruptFlags(BOARD_SDHC_CD_PORT) == (1U << BOARD_SDHC_CD_PIN))
+    if (PORT_GetPinsInterruptFlags(BOARD_SDHC_CD_PORT_BASE) == (1U << BOARD_SDHC_CD_GPIO_PIN))
     {
         SDMMCHOST_DetectCardByGpio((sdmmchost_detect_card_t *)s_sdhcHandle.userData);
     }
     /* Clear interrupt flag.*/
-    PORT_ClearPinsInterruptFlags(BOARD_SDHC_CD_PORT, ~0U);
+    PORT_ClearPinsInterruptFlags(BOARD_SDHC_CD_PORT_BASE, ~0U);
     SDMMCEVENT_Notify(kSDMMCEVENT_CardDetect);
 }
 
