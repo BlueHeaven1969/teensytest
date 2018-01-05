@@ -7,16 +7,17 @@
 #include <board.h>
 #include <string.h>
 #include <stdio.h>
+#include <wchar.h>
 
 // SDK includes
 #include "fsl_gpio.h"
 #include "fsl_port.h"
 #include "fsl_sysmpu.h"
 #include "fsl_sd.h"
+#include "fsl_uart.h"
 #include "ff.h"
 #include "diskio.h"
 #include "fsl_sd_disk.h"
-#include "fsl_debug_console.h"
 
 // FreeRTOS includes
 #include "FreeRTOS.h"
@@ -41,7 +42,8 @@
 * @brief wait card insert function.
 */
 static status_t sdcardWaitCardInsert(void);
-
+static void UARTSendASCII(char *data);
+static void UARTSendWide(TCHAR *data);
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -78,90 +80,46 @@ static void main_task(void *handle) {
     FRESULT error;
     DIR directory; /* Directory object */
     FILINFO fileInformation;
-    UINT bytesWritten;
-    UINT bytesRead;
     const TCHAR driverNumberBuffer[3U] = {SDDISK + '0', ':', '/'};
-    volatile bool failedFlag = false;
-    char ch = '0';
-    //BYTE work[_MAX_SS];
     const TickType_t Delay = pdMS_TO_TICKS( 500UL );
 
-    PRINTF("Hello World!!!\r\n");
+    UARTSendASCII("\r\n\r\n\r\nHello World!!!\r\n");
 
-    PRINTF("\r\nFATFS example to demonstrate how to use FATFS with SD card.\r\n");
+    UARTSendASCII("\r\nMP3 Player (in progress)\r\n");
 
-    PRINTF("\r\nPlease insert a card into board.\r\n");
+    UARTSendASCII("\r\nPlease insert SDCARD...");
 
-    if (sdcardWaitCardInsert() != kStatus_Success)
+    if (SD_WaitCardDetectStatus(SD_HOST_BASEADDR, &s_sdCardDetect, true) == kStatus_Success)
     {
-        PRINTF("Card insert failed.\r\n");
+        UARTSendASCII("\r\nCard inserted.\r\n");
+        /* power on the card */
+        SD_PowerOnCard(g_sd.host.base, g_sd.usrParam.pwr);
+    }
+    else
+    {
+        UARTSendASCII("\r\nCard detect fail, exiting.\r\n");
         return;
     }
 
     if (f_mount(&g_fileSystem, driverNumberBuffer, 0U))
     {
-        PRINTF("Mount volume failed.\r\n");
+        UARTSendASCII("Mount volume failed, exiting.\r\n");
         return;
     }
 
 #if (_FS_RPATH >= 2U)
-    error = f_chdrive((char const *)&driverNumberBuffer[0U]);
+    error = f_chdrive((TCHAR const *)&driverNumberBuffer[0U]);
     if (error)
     {
-        PRINTF("Change drive failed.\r\n");
+        UARTSendASCII("Change drive failed, exiting.\r\n");
         return;
     }
 #endif
 
-    PRINTF("\r\nCreate directory......\r\n");
-    error = f_mkdir(_T("/dir_1"));
-    if (error)
+    UARTSendASCII("\r\nList the file in that directory......\r\n");
+    if (f_opendir(&directory, (const TCHAR *)"/"))
     {
-        if (error == FR_EXIST)
-        {
-            PRINTF("Directory exists.\r\n");
-        }
-        else
-        {
-            PRINTF("Make directory failed.\r\n");
-            return;
-        }
-    }
-
-    PRINTF("\r\nCreate a file in that directory......\r\n");
-    error = f_open(&g_fileObject, _T("/dir_1/f_1.dat"), (FA_WRITE | FA_READ | FA_CREATE_ALWAYS));
-    if (error)
-    {
-        if (error == FR_EXIST)
-        {
-            PRINTF("File exists.\r\n");
-        }
-        else
-        {
-            PRINTF("Open file failed.\r\n");
-            return;
-        }
-    }
-
-    PRINTF("\r\nCreate a directory in that directory......\r\n");
-    error = f_mkdir(_T("/dir_1/dir_2"));
-    if (error)
-    {
-        if (error == FR_EXIST)
-        {
-            PRINTF("Directory exists.\r\n");
-        }
-        else
-        {
-            PRINTF("Directory creation failed.\r\n");
-            return;
-        }
-    }
-
-    PRINTF("\r\nList the file in that directory......\r\n");
-    if (f_opendir(&directory, "/dir_1"))
-    {
-        PRINTF("Open directory failed.\r\n");
+        UARTSendASCII("Open directory failed.\r\n");
         return;
     }
 
@@ -180,73 +138,17 @@ static void main_task(void *handle) {
         }
         if (fileInformation.fattrib & AM_DIR)
         {
-            PRINTF("Directory file : %s.\r\n", fileInformation.fname);
+            UARTSendASCII("Directory--- ");
         }
         else
         {
-            PRINTF("General file : %s.\r\n", fileInformation.fname);
+            UARTSendASCII("File-------- ");
         }
+        UARTSendWide(fileInformation.fname);
+        UARTSendASCII("\r\n");
     }
 
-    memset(g_bufferWrite, 'a', sizeof(g_bufferWrite));
-    g_bufferWrite[BUFFER_SIZE - 2U] = '\r';
-    g_bufferWrite[BUFFER_SIZE - 1U] = '\n';
-
-    PRINTF("\r\nWrite/read file until encounters error......\r\n");
-    while (true)
-    {
-        if (failedFlag || (ch == 'q'))
-        {
-            break;
-        }
-
-        PRINTF("\r\nWrite to above created file.\r\n");
-        error = f_write(&g_fileObject, g_bufferWrite, sizeof(g_bufferWrite), &bytesWritten);
-        if ((error) || (bytesWritten != sizeof(g_bufferWrite)))
-        {
-            PRINTF("Write file failed. \r\n");
-            failedFlag = true;
-            continue;
-        }
-
-        /* Move the file pointer */
-        if (f_lseek(&g_fileObject, 0U))
-        {
-            PRINTF("Set file pointer position failed. \r\n");
-            failedFlag = true;
-            continue;
-        }
-
-        PRINTF("Read from above created file.\r\n");
-        memset(g_bufferRead, 0U, sizeof(g_bufferRead));
-        error = f_read(&g_fileObject, g_bufferRead, sizeof(g_bufferRead), &bytesRead);
-        if ((error) || (bytesRead != sizeof(g_bufferRead)))
-        {
-            PRINTF("Read file failed. \r\n");
-            failedFlag = true;
-            continue;
-        }
-
-        PRINTF("Compare the read/write content......\r\n");
-        if (memcmp(g_bufferWrite, g_bufferRead, sizeof(g_bufferWrite)))
-        {
-            PRINTF("Compare read/write content isn't consistent.\r\n");
-            failedFlag = true;
-            continue;
-        }
-        PRINTF("The read/write content is consistent.\r\n");
-
-        PRINTF("\r\nInput 'q' to quit read/write.\r\nInput other char to read/write file again.\r\n");
-        ch = GETCHAR();
-        PUTCHAR(ch);
-    }
-    PRINTF("\r\nThe example will not read/write file again.\r\n");
-
-    if (f_close(&g_fileObject))
-    {
-        PRINTF("\r\nClose file failed.\r\n");
-        return;
-    }
+    UARTSendASCII("\r\nEntering blinky...\r\n\r\n");
 
     for (;;)
     {
@@ -260,17 +162,41 @@ static void main_task(void *handle) {
  */
 int main(void) {
     gpio_pin_config_t led_config = { kGPIO_DigitalOutput, 0 };
+    uart_config_t uart_config;
 
-	/* Init board hardware. */
+	// Initialize low level hardware
 	BOARD_InitPins();
 	BOARD_BootClockRUN();
-	BOARD_InitDebugConsole();
 	SYSMPU_Enable(SYSMPU, false);
 
-	// Init on board LED
+	// Initialize peripherals
+	// *** UART -- debugging UART (UART0)
+	UART_GetDefaultConfig(&uart_config);
+	uart_config.baudRate_Bps = BOARD_DEBUG_UART_BAUDRATE;
+	/* Enable clock and initial UART module follow user configure structure. */
+    UART_Init((UART_Type *)BOARD_DEBUG_UART_BASEADDR, &uart_config,
+              BOARD_DEBUG_UART_CLK_FREQ);
+    UART_EnableTx((UART_Type *)BOARD_DEBUG_UART_BASEADDR, true);
+    UART_EnableRx((UART_Type *)BOARD_DEBUG_UART_BASEADDR, true);
+
+	// *** GPIO -- on board LED
 	GPIO_PinInit(BOARD_LED_GPIO, BOARD_LED_PIN, &led_config);
+
+	// *** SDHC -- SDCARD
 	// This is so FreeRTOS doesn't hang because IRQ priority is too high
     NVIC_SetPriority(BOARD_SDHC_IRQ, 4U);
+    // This g_sd variable is a driver global (ick)
+    g_sd.host.base           = SD_HOST_BASEADDR;
+    g_sd.host.sourceClock_Hz = SD_HOST_CLK_FREQ;
+    g_sd.usrParam.cd         = &s_sdCardDetect;
+    g_sd.isHostReady         = false;
+    // Initialize host
+    if (SD_HostInit(&g_sd) != kStatus_Success)
+    {
+        UARTSendASCII("\r\nSD host init fail\r\n");
+    }
+    // Power off card (does nothing)
+    SD_PowerOffCard(g_sd.host.base, g_sd.usrParam.pwr);
 
 	/* Create RTOS task */
 	xTaskCreate(main_task, "Main_task",
@@ -432,12 +358,6 @@ void BOARD_InitPins(void)
                   | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX));
 }
 
-void BOARD_InitDebugConsole(void)
-{
-    uint32_t uartClkSrcFreq = BOARD_DEBUG_UART_CLK_FREQ;
-    DbgConsole_Init(BOARD_DEBUG_UART_BASEADDR, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, uartClkSrcFreq);
-}
-
 static status_t sdcardWaitCardInsert(void)
 {
     /* Save host information. */
@@ -449,7 +369,7 @@ static status_t sdcardWaitCardInsert(void)
     /* SD host init function */
     if (SD_HostInit(&g_sd) != kStatus_Success)
     {
-        PRINTF("\r\nSD host init fail\r\n");
+        UARTSendASCII("\r\nSD host init fail\r\n");
         return kStatus_Fail;
     }
     /* power off card */
@@ -457,15 +377,47 @@ static status_t sdcardWaitCardInsert(void)
     /* wait card insert */
     if (SD_WaitCardDetectStatus(SD_HOST_BASEADDR, &s_sdCardDetect, true) == kStatus_Success)
     {
-        PRINTF("\r\nCard inserted.\r\n");
+        UARTSendASCII("\r\nCard inserted.\r\n");
         /* power on the card */
         SD_PowerOnCard(g_sd.host.base, g_sd.usrParam.pwr);
     }
     else
     {
-        PRINTF("\r\nCard detect fail.\r\n");
+        UARTSendASCII("\r\nCard detect fail.\r\n");
         return kStatus_Fail;
     }
 
     return kStatus_Success;
+}
+
+static void UARTSendASCII(char *data)
+{
+    size_t len = strlen(data);
+    UART_WriteBlocking((UART_Type *)BOARD_DEBUG_UART_BASEADDR, (uint8_t *)data, len);
+}
+
+static void UARTSendWide(TCHAR *data)
+{
+    char dutf8[300];
+    int i, j=0;
+    for (i=0;i<300;i++)
+    {
+        if (data[i]==0) break;
+        if (data[i]<0x80)
+        {
+            dutf8[j++]=data[i];
+        }
+        else if (data[i]<0x800)
+        {
+            dutf8[j++]=0xC0 + (data[i] >> 6);
+            dutf8[j++]=0x80 + (data[i] & 0x3F);
+        }
+        else
+        {
+            dutf8[j++]=0xE0 + (data[i] >> 12);
+            dutf8[j++]=0x80 + ((data[i] >> 6) & 0x3F);
+            dutf8[j++]=0x80 + (data[i] & 0x3F);
+        }
+    }
+    UART_WriteBlocking((UART_Type *)BOARD_DEBUG_UART_BASEADDR, dutf8,j);
 }

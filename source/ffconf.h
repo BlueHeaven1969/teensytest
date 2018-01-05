@@ -77,7 +77,7 @@
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
 
-#define _CODE_PAGE	932
+#define _CODE_PAGE	437
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect setting of the code page can cause a file open failure.
 /
@@ -124,13 +124,13 @@
 /  ff_memfree(), must be added to the project. */
 
 
-#define	_LFN_UNICODE	0
+#define	_LFN_UNICODE	1
 /* This option switches character encoding on the API. (0:ANSI/OEM or 1:UTF-16)
 /  To use Unicode string for the path name, enable LFN and set _LFN_UNICODE = 1.
 /  This option also affects behavior of string I/O functions. */
 
 
-#define _STRF_ENCODE	3
+#define _STRF_ENCODE	0
 /* When _LFN_UNICODE == 1, this option selects the character encoding ON THE FILE to
 /  be read/written via string I/O functions, f_gets(), f_putc(), f_puts and f_printf().
 /
