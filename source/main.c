@@ -4,20 +4,11 @@
 // INCLUDES
 
 // ARM includes
-#include <board.h>
-#include <string.h>
-#include <stdio.h>
-#include <wchar.h>
 
 // SDK includes
 #include "fsl_gpio.h"
 #include "fsl_port.h"
 #include "fsl_sysmpu.h"
-#include "fsl_sd.h"
-#include "fsl_uart.h"
-#include "ff.h"
-#include "diskio.h"
-#include "fsl_sd_disk.h"
 
 // FreeRTOS includes
 #include "FreeRTOS.h"
@@ -26,129 +17,40 @@
 #include "timers.h"
 
 // Project includes
+#include "board.h"
 #include "clock_config.h"
-#include "ffconf.h"
+#include "uart.h"
+#include "sdcard.h"
 
 // DEFINES  ====================================================================
 /* Task priorities. */
 #define main_task_PRIORITY (configMAX_PRIORITIES - 1)
-/* buffer size (in byte) for read/write operations */
-#define BUFFER_SIZE (100U)
 
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-/*!
-* @brief wait card insert function.
-*/
-static status_t sdcardWaitCardInsert(void);
-static void UARTSendASCII(char *data);
-static void UARTSendWide(TCHAR *data);
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static FATFS g_fileSystem; /* File system object */
-static FIL g_fileObject;   /* File object */
-
-/* @brief decription about the read/write buffer
-* The size of the read/write buffer should be a multiple of 512, since SDHC/SDXC card uses 512-byte fixed
-* block length and this driver example is enabled with a SDHC/SDXC card.If you are using a SDSC card, you
-* can define the block length by yourself if the card supports partial access.
-* The address of the read/write buffer should align to the specific DMA data buffer address align value if
-* DMA transfer is used, otherwise the buffer address is not important.
-* At the same time buffer address/size should be aligned to the cache line size if cache is supported.
-*/
-SDK_ALIGN(uint8_t g_bufferWrite[SDK_SIZEALIGN(BUFFER_SIZE, SDMMC_DATA_BUFFER_ALIGN_CACHE)],
-          MAX(SDMMC_DATA_BUFFER_ALIGN_CACHE, SDMMCHOST_DMA_BUFFER_ADDR_ALIGN));
-SDK_ALIGN(uint8_t g_bufferRead[SDK_SIZEALIGN(BUFFER_SIZE, SDMMC_DATA_BUFFER_ALIGN_CACHE)],
-          MAX(SDMMC_DATA_BUFFER_ALIGN_CACHE, SDMMCHOST_DMA_BUFFER_ADDR_ALIGN));
-/*! @brief SDMMC host detect card configuration */
-static const sdmmchost_detect_card_t s_sdCardDetect = {
-#ifndef BOARD_SD_DETECT_TYPE
-    .cdType = kSDMMCHOST_DetectCardByGpioCD,
-#else
-    .cdType = BOARD_SD_DETECT_TYPE,
-#endif
-    .cdTimeOut_ms = (~0U),
-};
-
 // FUNCTIONS  ==================================================================
 /*!
  * @brief Task responsible for printing of "Hello world." message.
  */
 static void main_task(void *handle) {
-    FRESULT error;
-    DIR directory; /* Directory object */
-    FILINFO fileInformation;
-    const TCHAR driverNumberBuffer[3U] = {SDDISK + '0', ':', '/'};
     const TickType_t Delay = pdMS_TO_TICKS( 500UL );
 
-    UARTSendASCII("\r\n\r\n\r\nHello World!!!\r\n");
+    UART__SendASCII("\r\n\r\n\r\nHello World!!!\r\n");
 
-    UARTSendASCII("\r\nMP3 Player (in progress)\r\n");
+    UART__SendASCII("\r\nMP3 Player (in progress)\r\n");
 
-    UARTSendASCII("\r\nPlease insert SDCARD...");
+    UART__SendASCII("\r\nPlease insert SDCARD...");
 
-    if (SD_WaitCardDetectStatus(SD_HOST_BASEADDR, &s_sdCardDetect, true) == kStatus_Success)
-    {
-        UARTSendASCII("\r\nCard inserted.\r\n");
-        /* power on the card */
-        SD_PowerOnCard(g_sd.host.base, g_sd.usrParam.pwr);
-    }
-    else
-    {
-        UARTSendASCII("\r\nCard detect fail, exiting.\r\n");
-        return;
-    }
+    if (SDCARD__WaitForInsert()) return;
 
-    if (f_mount(&g_fileSystem, driverNumberBuffer, 0U))
-    {
-        UARTSendASCII("Mount volume failed, exiting.\r\n");
-        return;
-    }
+    SDCARD__ListRootDir();
 
-#if (_FS_RPATH >= 2U)
-    error = f_chdrive((TCHAR const *)&driverNumberBuffer[0U]);
-    if (error)
-    {
-        UARTSendASCII("Change drive failed, exiting.\r\n");
-        return;
-    }
-#endif
-
-    UARTSendASCII("\r\nList the file in that directory......\r\n");
-    if (f_opendir(&directory, (const TCHAR *)"/"))
-    {
-        UARTSendASCII("Open directory failed.\r\n");
-        return;
-    }
-
-    for (;;)
-    {
-        error = f_readdir(&directory, &fileInformation);
-
-        /* To the end. */
-        if ((error != FR_OK) || (fileInformation.fname[0U] == 0U))
-        {
-            break;
-        }
-        if (fileInformation.fname[0] == '.')
-        {
-            continue;
-        }
-        if (fileInformation.fattrib & AM_DIR)
-        {
-            UARTSendASCII("Directory--- ");
-        }
-        else
-        {
-            UARTSendASCII("File-------- ");
-        }
-        UARTSendWide(fileInformation.fname);
-        UARTSendASCII("\r\n");
-    }
-
-    UARTSendASCII("\r\nEntering blinky...\r\n\r\n");
+    UART__SendASCII("\r\nEntering blinky...\r\n\r\n");
 
     for (;;)
     {
@@ -162,7 +64,6 @@ static void main_task(void *handle) {
  */
 int main(void) {
     gpio_pin_config_t led_config = { kGPIO_DigitalOutput, 0 };
-    uart_config_t uart_config;
 
 	// Initialize low level hardware
 	BOARD_InitPins();
@@ -171,37 +72,19 @@ int main(void) {
 
 	// Initialize peripherals
 	// *** UART -- debugging UART (UART0)
-	UART_GetDefaultConfig(&uart_config);
-	uart_config.baudRate_Bps = BOARD_DEBUG_UART_BAUDRATE;
-	/* Enable clock and initial UART module follow user configure structure. */
-    UART_Init((UART_Type *)BOARD_DEBUG_UART_BASEADDR, &uart_config,
-              BOARD_DEBUG_UART_CLK_FREQ);
-    UART_EnableTx((UART_Type *)BOARD_DEBUG_UART_BASEADDR, true);
-    UART_EnableRx((UART_Type *)BOARD_DEBUG_UART_BASEADDR, true);
+	UART__Init();
 
 	// *** GPIO -- on board LED
 	GPIO_PinInit(BOARD_LED_GPIO, BOARD_LED_PIN, &led_config);
 
 	// *** SDHC -- SDCARD
-	// This is so FreeRTOS doesn't hang because IRQ priority is too high
-    NVIC_SetPriority(BOARD_SDHC_IRQ, 4U);
-    // This g_sd variable is a driver global (ick)
-    g_sd.host.base           = SD_HOST_BASEADDR;
-    g_sd.host.sourceClock_Hz = SD_HOST_CLK_FREQ;
-    g_sd.usrParam.cd         = &s_sdCardDetect;
-    g_sd.isHostReady         = false;
-    // Initialize host
-    if (SD_HostInit(&g_sd) != kStatus_Success)
-    {
-        UARTSendASCII("\r\nSD host init fail\r\n");
-    }
-    // Power off card (does nothing)
-    SD_PowerOffCard(g_sd.host.base, g_sd.usrParam.pwr);
+	SDCARD__Init();
 
-	/* Create RTOS task */
+	// Create Main thread
 	xTaskCreate(main_task, "Main_task",
 	            5000L/sizeof(portSTACK_TYPE), NULL, main_task_PRIORITY,
 	            NULL);
+	// start RTOS
 	vTaskStartScheduler();
 
 	for(;;)
@@ -358,66 +241,3 @@ void BOARD_InitPins(void)
                   | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX));
 }
 
-static status_t sdcardWaitCardInsert(void)
-{
-    /* Save host information. */
-    g_sd.host.base = SD_HOST_BASEADDR;
-    g_sd.host.sourceClock_Hz = SD_HOST_CLK_FREQ;
-    /* card detect type */
-    g_sd.usrParam.cd = &s_sdCardDetect;
-    g_sd.isHostReady = false;
-    /* SD host init function */
-    if (SD_HostInit(&g_sd) != kStatus_Success)
-    {
-        UARTSendASCII("\r\nSD host init fail\r\n");
-        return kStatus_Fail;
-    }
-    /* power off card */
-    SD_PowerOffCard(g_sd.host.base, g_sd.usrParam.pwr);
-    /* wait card insert */
-    if (SD_WaitCardDetectStatus(SD_HOST_BASEADDR, &s_sdCardDetect, true) == kStatus_Success)
-    {
-        UARTSendASCII("\r\nCard inserted.\r\n");
-        /* power on the card */
-        SD_PowerOnCard(g_sd.host.base, g_sd.usrParam.pwr);
-    }
-    else
-    {
-        UARTSendASCII("\r\nCard detect fail.\r\n");
-        return kStatus_Fail;
-    }
-
-    return kStatus_Success;
-}
-
-static void UARTSendASCII(char *data)
-{
-    size_t len = strlen(data);
-    UART_WriteBlocking((UART_Type *)BOARD_DEBUG_UART_BASEADDR, (uint8_t *)data, len);
-}
-
-static void UARTSendWide(TCHAR *data)
-{
-    char dutf8[300];
-    int i, j=0;
-    for (i=0;i<300;i++)
-    {
-        if (data[i]==0) break;
-        if (data[i]<0x80)
-        {
-            dutf8[j++]=data[i];
-        }
-        else if (data[i]<0x800)
-        {
-            dutf8[j++]=0xC0 + (data[i] >> 6);
-            dutf8[j++]=0x80 + (data[i] & 0x3F);
-        }
-        else
-        {
-            dutf8[j++]=0xE0 + (data[i] >> 12);
-            dutf8[j++]=0x80 + ((data[i] >> 6) & 0x3F);
-            dutf8[j++]=0x80 + (data[i] & 0x3F);
-        }
-    }
-    UART_WriteBlocking((UART_Type *)BOARD_DEBUG_UART_BASEADDR, dutf8,j);
-}

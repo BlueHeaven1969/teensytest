@@ -681,7 +681,7 @@ extern "C" {
  */
 static inline status_t SDMMCHOST_NotSupport(void *parameter)
 {
-    parameter = parameter;
+    parameter = parameter; // @suppress("Assignment to itself")
     return kStatus_Success;
 }
 
