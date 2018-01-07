@@ -21,6 +21,7 @@
 #include "clock_config.h"
 #include "uart.h"
 #include "sdcard.h"
+#include "player.h"
 
 // DEFINES  ====================================================================
 /* Task priorities. */
@@ -33,6 +34,8 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
+uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] __attribute__ ( ( section( ".my_heap" ) ) );
+
 // FUNCTIONS  ==================================================================
 /*!
  * @brief Task responsible for printing of "Hello world." message.
@@ -46,11 +49,21 @@ static void main_task(void *handle) {
 
     UART__SendASCII("\r\nPlease insert SDCARD...");
 
-    if (SDCARD__WaitForInsert()) return;
+    if (!SDCARD__WaitForInsert()) {
 
-    SDCARD__ListRootDir();
+        UART__SendASCII("\r\nLaunching Player...\r\n\r\n");
 
-    UART__SendASCII("\r\nEntering blinky...\r\n\r\n");
+        if (xTaskCreate(player_task, "Player Main", 0xA000, NULL,
+                player_main_task_PRIORITY, NULL) != pdPASS)
+        {
+            UART__SendASCII("ERROR STARTING PLAYER THREAD!!\r\n");
+        }
+    }
+    else
+    {
+        UART__SendASCII("\r\nProblem with card insertion, player not started!\r\n");
+
+    }
 
     for (;;)
     {
@@ -80,10 +93,10 @@ int main(void) {
 	// *** SDHC -- SDCARD
 	SDCARD__Init();
 
-	// Create Main thread
-	xTaskCreate(main_task, "Main_task",
-	            5000L/sizeof(portSTACK_TYPE), NULL, main_task_PRIORITY,
-	            NULL);
+	// Create Main thread (512 byte allocation from my_heap)
+	xTaskCreate(main_task, "Main_task", 0x200, NULL, main_task_PRIORITY, NULL);
+	// Create UART receive thread
+	xTaskCreate(UART__Receive, "UART Rx", 0x100, NULL, uart_task_PRIORITY, NULL);
 	// start RTOS
 	vTaskStartScheduler();
 

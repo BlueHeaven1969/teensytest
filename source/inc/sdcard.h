@@ -8,6 +8,12 @@
 #ifndef SOURCE_INC_SDCARD_H_
 #define SOURCE_INC_SDCARD_H_
 
+typedef struct
+{
+
+
+} FileCatalog_t;
+
 void SDCARD__Init(void);
 int  SDCARD__WaitForInsert(void);
 void SDCARD__ListRootDir(void);

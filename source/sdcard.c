@@ -4,31 +4,24 @@
  *  Created on: Jan 6, 2018
  *      Author: rsp
  */
+#include <stdio.h>
+
+#include "FreeRTOS.h"
 #include "fsl_sd.h"
 #include "ff.h"
 #include "diskio.h"
 #include "fsl_sd_disk.h"
+#include "fsl_flash.h"
 
 #include "board.h"
 #include "uart.h"
 #include "sdcard.h"
 
-static FATFS g_fileSystem; /* File system object */
-//static FIL g_fileObject;   /* File object */
 
-/* @brief decription about the read/write buffer
-* The size of the read/write buffer should be a multiple of 512, since SDHC/SDXC card uses 512-byte fixed
-* block length and this driver example is enabled with a SDHC/SDXC card.If you are using a SDSC card, you
-* can define the block length by yourself if the card supports partial access.
-* The address of the read/write buffer should align to the specific DMA data buffer address align value if
-* DMA transfer is used, otherwise the buffer address is not important.
-* At the same time buffer address/size should be aligned to the cache line size if cache is supported.
-*/
-//SDK_ALIGN(uint8_t g_bufferWrite[SDK_SIZEALIGN(BUFFER_SIZE, SDMMC_DATA_BUFFER_ALIGN_CACHE)],
-//          MAX(SDMMC_DATA_BUFFER_ALIGN_CACHE, SDMMCHOST_DMA_BUFFER_ADDR_ALIGN));
-//SDK_ALIGN(uint8_t g_bufferRead[SDK_SIZEALIGN(BUFFER_SIZE, SDMMC_DATA_BUFFER_ALIGN_CACHE)],
-//          MAX(SDMMC_DATA_BUFFER_ALIGN_CACHE, SDMMCHOST_DMA_BUFFER_ADDR_ALIGN));
-/*! @brief SDMMC host detect card configuration */
+// LOCAL VARIABLES
+static FATFS          g_fileSystem;
+
+// SDMMC host detect card configuration
 static const sdmmchost_detect_card_t s_sdCardDetect = {
 #ifndef BOARD_SD_DETECT_TYPE
     .cdType = kSDMMCHOST_DetectCardByGpioCD,
@@ -90,12 +83,14 @@ int SDCARD__WaitForInsert(void)
 #endif
     return 0;
 }
-
+/*
 void SDCARD__ListRootDir(void)
 {
     FRESULT error;
-    DIR directory; /* Directory object */
+    DIR directory;
     FILINFO fileInformation;
+    status_t fResult;
+    char uBuffer[256];
 
     UART__SendASCII("\r\nList the file in that directory......\r\n");
     if (f_opendir(&directory, (const TCHAR *)"/"))
@@ -108,7 +103,6 @@ void SDCARD__ListRootDir(void)
     {
         error = f_readdir(&directory, &fileInformation);
 
-        /* To the end. */
         if ((error != FR_OK) || (fileInformation.fname[0U] == 0U))
         {
             break;
@@ -129,6 +123,7 @@ void SDCARD__ListRootDir(void)
         UART__SendASCII("\r\n");
     }
 }
+*/
 /*
  * EOF - file ends with blank line
  */

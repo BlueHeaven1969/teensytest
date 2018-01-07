@@ -6,8 +6,10 @@
  */
 // INCLUDES
 #include "fsl_uart.h"
+#include "ff.h"
 
 #include "board.h"
+#include "strconv.h"
 #include "uart.h"
 
 // FUNCTIONS
@@ -31,30 +33,23 @@ void UART__SendASCII(char *data)
 
 void UART__SendWide(TCHAR *data)
 {
-    char dutf8[300];
-    int i, j=0;
-    for (i=0;i<300;i++)
+    uint8_t dutf8[300];
+    int len;
+    len = STRCONV__UTF16toUTF8(data, dutf8);
+    if (len)
     {
-        if (data[i]==0) break;
-        if (data[i]<0x80)
-        {
-            dutf8[j++]=data[i];
-        }
-        else if (data[i]<0x800)
-        {
-            dutf8[j++]=0xC0 + (data[i] >> 6);
-            dutf8[j++]=0x80 + (data[i] & 0x3F);
-        }
-        else
-        {
-            dutf8[j++]=0xE0 + (data[i] >> 12);
-            dutf8[j++]=0x80 + ((data[i] >> 6) & 0x3F);
-            dutf8[j++]=0x80 + (data[i] & 0x3F);
-        }
+        UART_WriteBlocking((UART_Type *)BOARD_DEBUG_UART_BASEADDR, dutf8, len);
     }
-    UART_WriteBlocking((UART_Type *)BOARD_DEBUG_UART_BASEADDR, dutf8,j);
 }
 
+void UART__Receive(void *handle)
+{
+    uint8_t ch;
+    while (1)
+    {
+        UART_ReadBlocking((UART_Type *)BOARD_DEBUG_UART_BASEADDR, &ch, 1);
+    }
+}
 /*
  * EOF - file ends with blank line
  */

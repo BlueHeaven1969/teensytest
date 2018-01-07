@@ -130,7 +130,22 @@
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
-			<storageModule moduleId="ilg.gnumcueclipse.managedbuild.packs"/>
+			<storageModule moduleId="ilg.gnumcueclipse.managedbuild.packs">
+				<option id="cmsis.device.name" value="MK66FX1M0xxx18"/>
+				<option id="cmsis.family.name" value="MK66F18"/>
+				<option id="cmsis.device.vendor.name" value="NXP"/>
+				<option id="cmsis.device.vendor.id" value="11"/>
+				<option id="cmsis.device.pack.vendor" value="NXP"/>
+				<option id="cmsis.device.pack.name" value="MK66F18_DFP"/>
+				<option id="cmsis.device.pack.version" value="2.3.0"/>
+				<option id="cmsis.core.name" value="Cortex-M4"/>
+				<option id="cmsis.compiler.define" value=""/>
+				<memory section="FLEX_NVM" size="0x040000" start="0x10000000" startup="0"/>
+				<memory section="FLEX_RAM" size="0x1000" start="0x14000000" startup="0"/>
+				<memory section="PROGRAM_FLASH" size="0x100000" start="0x00000000" startup="1"/>
+				<memory section="SRAM_LOWER" size="0x010000" start="0x1fff0000" startup="0"/>
+				<memory section="SRAM_UPPER" size="0x030000" start="0x20000000" startup="0"/>
+			</storageModule>
 		</cconfiguration>
 		<cconfiguration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1657930839">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1657930839" moduleId="org.eclipse.cdt.core.settings" name="Release">

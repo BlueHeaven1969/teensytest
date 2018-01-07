@@ -107,8 +107,8 @@
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION         0
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
-#define configTOTAL_HEAP_SIZE                   ((size_t)(10240))
-#define configAPPLICATION_ALLOCATED_HEAP        0
+#define configTOTAL_HEAP_SIZE                   ((size_t)(0x0002F000))
+#define configAPPLICATION_ALLOCATED_HEAP        1
 
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                     0
@@ -121,6 +121,9 @@
 #define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_STATS_FORMATTING_FUNCTIONS    0
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
+#define configTASK_RETURN_ADDRESS               0
+#define configRECORD_STACK_HIGH_ADDRESS         1
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                   0
