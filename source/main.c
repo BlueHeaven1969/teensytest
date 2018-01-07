@@ -43,25 +43,25 @@ uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] __attribute__ ( ( section( ".my_heap" ) 
 static void main_task(void *handle) {
     const TickType_t Delay = pdMS_TO_TICKS( 500UL );
 
-    UART__SendASCII("\r\n\r\n\r\nHello World!!!\r\n");
+    UART__SendASCII("\r\n\r\n\r\nHello World!!!\r\n", UART_COLOR_YELLOW);
 
-    UART__SendASCII("\r\nMP3 Player (in progress)\r\n");
+    UART__SendASCII("MP3 Player (in progress)\r\n", UART_COLOR_DEFAULT);
 
-    UART__SendASCII("\r\nPlease insert SDCARD...");
+    UART__SendASCII("\r\nPlease insert SDCARD...", UART_COLOR_DEFAULT);
 
     if (!SDCARD__WaitForInsert()) {
 
-        UART__SendASCII("\r\nLaunching Player...\r\n\r\n");
+        UART__SendASCII("\r\nLaunching Player...\r\n", UART_COLOR_DEFAULT);
 
-        if (xTaskCreate(player_task, "Player Main", 0xA000, NULL,
+        if (xTaskCreate(player_task, "Player Main", 0x800, NULL,
                 player_main_task_PRIORITY, NULL) != pdPASS)
         {
-            UART__SendASCII("ERROR STARTING PLAYER THREAD!!\r\n");
+            UART__SendASCII("ERROR STARTING PLAYER THREAD!!\r\n", UART_COLOR_RED);
         }
     }
     else
     {
-        UART__SendASCII("\r\nProblem with card insertion, player not started!\r\n");
+        UART__SendASCII("\r\nProblem with card insertion, player not started!\r\n", UART_COLOR_RED);
 
     }
 

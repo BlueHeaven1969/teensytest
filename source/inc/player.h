@@ -16,20 +16,15 @@
 #define PLAYER_QUEUE_TYPE    sizeof(uint32_t)
 #define PLAYER_MAX_SHUFFLE   256  // greater than this, shuffle=random
 #define PLAYER_CHAR_WIDTH    18   // 2 extra
-#define PLAYER_FLASH_TAG     0xAA55BB44
+#define PLAYER_FLASH_TAG     0xAA550002 // AA55 followed by version number of params
 
 // Flash memory locations
 #define PLAYER_TAG_SECTOR    0
 #define PLAYER_PARAMS_SECTOR 1
-#define PLAYER_ROOT_SECTOR   10
-
-// Flash status bits
-#define PLAYER_FLASH_INITTED   0x01
-#define PLAYER_FLASH_PARAMS    0x02
-#define PLAYER_FLASH_ROOT      0x04
+#define PLAYER_ROOT_SECTOR   4
 
 // File album flag
-#define PLAYER_ALBUM_FLAG      0x8000
+#define PLAYER_MP3_FLAG        0x8000
 #define PLAYER_PLAYLIST_FLAG   0x4000
 
 // Amount of heap in bytes to allocate to directory tree
@@ -87,18 +82,25 @@ typedef struct FileList
 
 typedef struct
 {
-    uint8_t           flashStatus;                          //    1  =    1
-    PlayerMode_t      mode;                                 //    1  =    2
-    PlayerOrder_t     order;                                //    1  =    3
-    PlayerRepeat_t    repeat;                               //    1  =    4
-    PlayerState_t     state;                                //    1  =    5
-    PlayerUI_t        currUI;                               //    1  =    6
-    uint8_t           dummy1;                               //    1  =    7
-    uint8_t           dummy2;                               //    1  =    8
-    DIR               currDir;                              //   80  =   88
-    FILINFO           currFile;                             //  552  =  640
-    FILINFO           playList;                             //  552  = 1192
-    uint16_t          playBits[(PLAYER_MAX_SHUFFLE >> 4)];  //   32  = 1224
+    // 8 bytes basic info (1 write block)
+    PlayerMode_t      mode;
+    PlayerOrder_t     order;
+    PlayerRepeat_t    repeat;
+    PlayerState_t     state;
+    PlayerUI_t        currUI;
+    uint8_t           dummy1;
+    uint8_t           dummy2;
+    uint8_t           dummy3;
+    // 80 byte directory (10 write blocks)
+    DIR               currDir;
+    // 2x552 = 1104 (138 write blocks)
+    FILINFO           currFile;
+    FILINFO           playList;
+    // 32 byte bit array (4 write blocks)
+    uint16_t          playBits[(PLAYER_MAX_SHUFFLE >> 4)];
+    // 8 bytes addresses (1 write block)
+    PlayerFileList_t *rootDir;
+    PlayerFileList_t *dummyList;
 } PlayerParams_t;
 
 void player_task(void *handle);

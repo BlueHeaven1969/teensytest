@@ -44,7 +44,7 @@ void SDCARD__Init(void)
     // Initialize host
     if (SD_HostInit(&g_sd) != kStatus_Success)
     {
-        UART__SendASCII("\r\nSD host init fail\r\n");
+        UART__SendASCII("\r\nSD host init fail\r\n", UART_COLOR_RED);
     }
     // Power off card (does nothing)
     SD_PowerOffCard(g_sd.host.base, g_sd.usrParam.pwr);
@@ -57,19 +57,19 @@ int SDCARD__WaitForInsert(void)
 
     if (SD_WaitCardDetectStatus(SD_HOST_BASEADDR, &s_sdCardDetect, true) == kStatus_Success)
     {
-        UART__SendASCII("\r\nCard inserted.\r\n");
+        UART__SendASCII("Card inserted.\r\n", UART_COLOR_DEFAULT);
         /* power on the card */
         SD_PowerOnCard(g_sd.host.base, g_sd.usrParam.pwr);
     }
     else
     {
-        UART__SendASCII("\r\nCard detect fail, exiting.\r\n");
+        UART__SendASCII("Card detect fail, exiting.\r\n", UART_COLOR_RED);
         return 1;
     }
 
     if (f_mount(&g_fileSystem, driverNumberBuffer, 0U))
     {
-        UART__SendASCII("Mount volume failed, exiting.\r\n");
+        UART__SendASCII("Mount volume failed, exiting.\r\n", UART_COLOR_RED);
         return 1;
     }
 
@@ -77,53 +77,13 @@ int SDCARD__WaitForInsert(void)
     error = f_chdrive((TCHAR const *)&driverNumberBuffer[0U]);
     if (error)
     {
-        UART__SendASCII("Change drive failed, exiting.\r\n");
+        UART__SendASCII("Change drive failed, exiting.\r\n", UART_COLOR_RED);
         return 1;
     }
 #endif
     return 0;
 }
-/*
-void SDCARD__ListRootDir(void)
-{
-    FRESULT error;
-    DIR directory;
-    FILINFO fileInformation;
-    status_t fResult;
-    char uBuffer[256];
 
-    UART__SendASCII("\r\nList the file in that directory......\r\n");
-    if (f_opendir(&directory, (const TCHAR *)"/"))
-    {
-        UART__SendASCII("Open directory failed.\r\n");
-        return;
-    }
-
-    for (;;)
-    {
-        error = f_readdir(&directory, &fileInformation);
-
-        if ((error != FR_OK) || (fileInformation.fname[0U] == 0U))
-        {
-            break;
-        }
-        if (fileInformation.fname[0] == '.')
-        {
-            continue;
-        }
-        if (fileInformation.fattrib & AM_DIR)
-        {
-            UART__SendASCII("Directory--- ");
-        }
-        else
-        {
-            UART__SendASCII("File-------- ");
-        }
-        UART__SendWide(fileInformation.fname);
-        UART__SendASCII("\r\n");
-    }
-}
-*/
 /*
  * EOF - file ends with blank line
  */
