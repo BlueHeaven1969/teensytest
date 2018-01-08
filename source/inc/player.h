@@ -16,7 +16,7 @@
 #define PLAYER_QUEUE_TYPE    sizeof(uint32_t)
 #define PLAYER_MAX_SHUFFLE   256  // greater than this, shuffle=random
 #define PLAYER_CHAR_WIDTH    18   // 2 extra
-#define PLAYER_FLASH_TAG     0xAA550002 // AA55 followed by version number of params
+#define PLAYER_FLASH_TAG     0xAA550003 // AA55 followed by version number of params
 
 // Flash memory locations
 #define PLAYER_TAG_SECTOR    0
@@ -31,7 +31,8 @@
 #define PLAYER_DIR_TREE_HEAP   131076  // 128k
 typedef enum
 {
-    PLAYER_TASK_SELECTOR,
+    PLAYER_TASK_ENT_SELECTOR,
+    PLAYER_TASK_ENT_PLAYBACK,
 
 
 
@@ -67,7 +68,9 @@ typedef enum
 typedef enum
 {
     PLAYER_UI_UNKNOWN,
-    PLAYER_UI_SELECTOR
+    PLAYER_UI_SELECTOR,
+    PLAYER_UI_SETTINGS,
+    PLAYER_UI_PLAYBACK
 } PlayerUI_t;
 
 // This is 32-bytes, can fit 128 into a 4k section

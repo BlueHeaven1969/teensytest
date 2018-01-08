@@ -340,6 +340,22 @@ void STRCONV__UTF16toLCD(TCHAR *datain, uint8_t *dataout, size_t bufflen)
                 case 0x2015:
                     dataout[j++] = '-';
                     break;
+                case 0x2018:
+                case 0x2019:
+                    dataout[j++] = '\'';
+                    break;
+                case 0x2026:
+                    dataout[j++] = '.';
+                    break;
+                case 0x221E:
+                    dataout[j++] = '8';
+                    break;
+                case 0x2605:
+                    dataout[j++] = '*';
+                    break;
+                case 0x266F:
+                    dataout[j++] = '#';
+                    break;
                 default:
                     dataout[j++] = ' ';
                     sprintf(msg,"Unhandled Unicode!! -- %04x\r\n",datain[i]);

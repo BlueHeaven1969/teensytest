@@ -30,7 +30,9 @@ static void player_readParams(void);
 static void player_writeParams(void);
 static void player_createRootDirTree(void);
 static int  player_createDirTree(PlayerFileList_t *tree, uint16_t maxEntries,
-                                 TCHAR *directory, PlayerFileList_t **root);
+                                 TCHAR *directory, PlayerFileList_t **root,
+                                 PlayerFileList_t *parent);
+static void player_skipNFiles(TCHAR *dirPath, uint16_t n, FILINFO *fInfo);
 
 void player_task(void *handle)
 {
@@ -101,26 +103,35 @@ void player_task(void *handle)
     }
 
     // Figure out what to do on start
+    // on startup, currently not in any ui
+    playerInfo.currUI = PLAYER_UI_UNKNOWN;
+
+    // check saved mode to determine where to go
     switch (playerInfo.mode)
     {
         case PLAYER_MODE_NONE:
-            task = PLAYER_TASK_SELECTOR;
+            task = PLAYER_TASK_ENT_SELECTOR;
             xQueueSend(taskQueue, &task, 0);
             break;
         case PLAYER_MODE_ALBUM:
         case PLAYER_MODE_ARTIST:
         case PLAYER_MODE_PLAYLIST:
-            // todo: fill in
+            task = PLAYER_TASK_ENT_PLAYBACK;
+            xQueueSend(taskQueue, &task, 0);
             break;
     }
 
     while(1)
     {
+        // *** THIS IS THE PLAYER UI TASK PROCESSING LOOP
         xQueueReceive(taskQueue, &task, portMAX_DELAY);
         switch (task)
         {
-            case PLAYER_TASK_SELECTOR:
+            case PLAYER_TASK_ENT_SELECTOR:
                 player_startSelector();
+                break;
+            case PLAYER_TASK_ENT_PLAYBACK:
+                // TODO
                 break;
         }
     }
@@ -164,18 +175,36 @@ static void player_writeParams(void)
 
 static void player_createRootDirTree(void)
 {
-    PlayerFileList_t *heapTree;
+    PlayerFileList_t *heapTree, *dirTree, *dirTreeRoot;
     uint16_t maxEntries;
     uint16_t n=0;
-    uint16_t numSect;
-    status_t       status;
+    uint16_t numSect, nSub;
+    status_t status;
+    FILINFO  fInfo;
 
+    UART__SendASCII("Scanning Directory Tree.\r\n", UART_COLOR_BLUE);
     maxEntries = PLAYER_DIR_TREE_HEAP / sizeof(PlayerFileList_t);
     heapTree = pvPortMalloc(PLAYER_DIR_TREE_HEAP);
     if (heapTree == NULL) return;
     memset(heapTree,0,PLAYER_DIR_TREE_HEAP);
 
-    n = player_createDirTree(heapTree, maxEntries, (TCHAR *)"/", &(playerInfo.rootDir));
+    n = player_createDirTree(heapTree, maxEntries, (TCHAR *)"/",
+                             &(playerInfo.rootDir), NULL);
+
+    maxEntries -= n;
+    // Let's cycle through these directories and add subdirs
+    dirTree = playerInfo.rootDir;
+    while (dirTree != NULL)
+    {
+        player_skipNFiles((TCHAR *)"/", dirTree->n, &fInfo);
+        nSub = player_createDirTree(&heapTree[n], maxEntries, fInfo.fname,
+                                    &dirTreeRoot, dirTree);
+        dirTree->par_ch = dirTreeRoot;
+        n += nSub;
+        maxEntries -= nSub;
+        dirTree = dirTree->next;
+        if (dirTree == playerInfo.rootDir) break;
+    }
 
     // save to flash!!
     numSect = ((n * sizeof(PlayerFileList_t)) / dflashSectorSize ) + 1; // num sectors
@@ -201,14 +230,14 @@ static void player_createRootDirTree(void)
 }
 
 static int player_createDirTree(PlayerFileList_t *tree, uint16_t maxEntries,
-                                 TCHAR *dirPath, PlayerFileList_t **root)
+                                TCHAR *dirPath, PlayerFileList_t **root,
+                                PlayerFileList_t *parent)
 {
     FRESULT error;
     uint16_t n=0;
     DIR directory;
     FILINFO fileInformation;
 
-    UART__SendASCII("Scanning Directory Tree.\r\n", UART_COLOR_BLUE);
     if (f_opendir(&directory, dirPath))
     {
         UART__SendASCII("Open directory failed.\r\n", UART_COLOR_RED);
@@ -252,7 +281,7 @@ static int player_createDirTree(PlayerFileList_t *tree, uint16_t maxEntries,
             tree[n-1].next = &tree[n];
             tree[n].prev = &tree[n-1];
         }
-        tree[n].par_ch = NULL;
+        tree[n].par_ch = parent;
         STRCONV__UTF16toLCD(fileInformation.fname, (uint8_t *)tree[n].name, PLAYER_CHAR_WIDTH);
         n++;
         if (n>=maxEntries) break;
@@ -264,6 +293,56 @@ static int player_createDirTree(PlayerFileList_t *tree, uint16_t maxEntries,
     *root = STRCONV__listsort(tree);
     f_closedir(&directory);
     return n;
+}
+
+static void player_skipNFiles(TCHAR *dirPath, uint16_t n, FILINFO *fInfo)
+{
+    DIR directory;
+    FRESULT error;
+    int i=0;
+
+    if (f_opendir(&directory, dirPath))
+    {
+        fInfo = NULL;
+        UART__SendASCII("Open directory failed.\r\n", UART_COLOR_RED);
+        return;
+    }
+
+    for (;;)
+    {
+        error = f_readdir(&directory, fInfo);
+
+        if ((error != FR_OK) || (fInfo->fname[0U] == 0U))
+        {
+            break;
+        }
+        if ((fInfo->fname[0] == '.') ||
+            (fInfo->fattrib & AM_HID) ||
+            (fInfo->fattrib & AM_SYS))
+        {
+            continue;
+        }
+
+        if ((fInfo->fattrib & AM_DIR) == 0)
+        {
+            TCHAR *ext = fInfo->fname;
+            while (ext[0])
+            {
+                if ((ext[0] == 0x2e) &&
+                    (ext[1] == 0x6d) &&
+                    (ext[2] == 0x33) &&
+                    (ext[3] == 0x75) &&
+                    (ext[4] == 0x38))
+                    break;
+                ext++;
+            }
+            if (ext[0] == 0) continue;
+        }
+        if (i==n) break;
+        i++;
+    }
+
+    f_closedir(&directory);
 }
 /*
  * EOF - file ends with blank line

@@ -48,9 +48,12 @@ void UART__SendUTF16(TCHAR *data, UartColor_t color)
 void UART__Receive(void *handle)
 {
     uint8_t ch;
+    char    text[32];
     while (1)
     {
         UART_ReadBlocking((UART_Type *)BOARD_DEBUG_UART_BASEADDR, &ch, 1);
+        sprintf(text,"Received Code = %02x\r\n",ch);
+        UART__SendASCII(text, UART_COLOR_BGREEN);
     }
 }
 /*
