@@ -11,6 +11,7 @@
 #include "ff.h"
 
 #define uart_task_PRIORITY (configMAX_PRIORITIES - 3)
+#define irda_task_PRIORITY (configMAX_PRIORITIES - 3)
 
 typedef enum {
     UART_COLOR_DEFAULT  = 0,
@@ -36,6 +37,9 @@ void UART__Init(void);
 void UART__SendASCII(char *data, UartColor_t color);
 void UART__SendUTF16(TCHAR *data, UartColor_t color);
 void UART__Receive(void *handle);
+
+void IRDA__Init(void);
+void IRDA__Receive(void *handle);
 
 #endif /* SOURCE_INC_UART_H_ */
 /*

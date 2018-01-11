@@ -53,6 +53,32 @@ extern "C" {
 #define BOARD_UART_IRQ_HANDLER    UART0_RX_TX_IRQHandler
 #define SOPT5_UART0TXSRC_UART_TX  0x00u
 
+// This is for the debug IRDA interface
+#define BOARD_IRDA_PORT           PORTD
+#define BOARD_IRDA_GPIO           GPIOD
+#define BOARD_IRDA_CMP1_PIN       3U
+#define BOARD_IRDA_IRQ            PORTD_IRQn
+#define BOARD_IRDA_IRQ_HANDLER    PORTD_IRQHandler
+
+// Timer for IRDA
+#define BOARD_FTM_BASEADDR        FTM3
+#define BOARD_FTM_X_CHANNEL       0U
+#define BOARD_FTM_Y_CHANNEL       1U
+#define BOARD_FTM_PERIOD_HZ       100000
+#define BOARD_FTM_PERIOD_US       10
+#define BOARD_FTM_IRQ_HANDLER     FTM3_IRQHandler
+#define BOARD_FTM_IRQ_VECTOR      FTM3_IRQn
+#define BOARD_FTM_SOURCE_CLOCK    (CLOCK_GetFreq(kCLOCK_BusClk)/4)
+
+// UART1 PARAMETERS
+#define BOARD_IRDA_UART_BAUDRATE  800
+#define BOARD_IRDA_UART_BASEADDR  UART1
+#define BOARD_IRDA_UART_INSTANCE  1U
+#define BOARD_IRDA_UART_CLKSRC    SYS_CLK
+#define BOARD_IRDA_UART_CLK_FREQ  CLOCK_GetCoreSysClkFreq()
+//#define BOARD_IRDA_IRQ            UART1_RX_TX_IRQn
+//#define BOARD_IRDA_IRQ_HANDLER    UART1_RX_TX_IRQHandler
+
 /* SDHC base address, clock and card detection pin */
 #define BOARD_SDHC_BASEADDR       SDHC
 #define BOARD_SDHC_CLKSRC         kCLOCK_CoreSysClk

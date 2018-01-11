@@ -23,7 +23,7 @@ static flash_config_t s_flashDriver;
 uint32_t dflashBlockBase = 0;
 uint32_t dflashTotalSize = 0;
 uint32_t dflashSectorSize = 0;
-
+QueueHandle_t  taskQueue;
 
 static void player_startSelector(void);
 static void player_readParams(void);
@@ -36,7 +36,6 @@ static void player_skipNFiles(TCHAR *dirPath, uint16_t n, FILINFO *fInfo);
 
 void player_task(void *handle)
 {
-    QueueHandle_t  taskQueue;
     PlayerTasks_t  task;
     uint32_t       tag[2];
     status_t       status;

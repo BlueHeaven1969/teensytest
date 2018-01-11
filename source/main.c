@@ -9,6 +9,7 @@
 #include "fsl_gpio.h"
 #include "fsl_port.h"
 #include "fsl_sysmpu.h"
+#include "fsl_lptmr.h"
 
 // FreeRTOS includes
 #include "FreeRTOS.h"
@@ -26,6 +27,7 @@
 // DEFINES  ====================================================================
 /* Task priorities. */
 #define main_task_PRIORITY (configMAX_PRIORITIES - 1)
+#define TIMER_CLOCK    (CLOCK_GetFreq(kCLOCK_BusClk)/64)
 
 /*******************************************************************************
  * Prototypes
@@ -67,7 +69,7 @@ static void main_task(void *handle) {
 
     for (;;)
     {
-        GPIO_PortToggle(BOARD_LED_GPIO, 1<<BOARD_LED_PIN);
+
         vTaskDelay(Delay);
     }
 }
@@ -77,6 +79,7 @@ static void main_task(void *handle) {
  */
 int main(void) {
     gpio_pin_config_t led_config = { kGPIO_DigitalOutput, 0 };
+    lptmr_config_t lptmrConfig;
 
 	// Initialize low level hardware
 	BOARD_InitPins();
@@ -93,10 +96,24 @@ int main(void) {
 	// *** SDHC -- SDCARD
 	SDCARD__Init();
 
+	// *** IRDA -- Infrared receiver
+	IRDA__Init();
+
+	// Set up simple timer for LED
+	LPTMR_GetDefaultConfig(&lptmrConfig);
+	LPTMR_Init(LPTMR0, &lptmrConfig);
+	LPTMR_SetTimerPeriod(LPTMR0, USEC_TO_COUNT(500000U,
+	                             CLOCK_GetFreq(kCLOCK_LpoClk)));
+	LPTMR_EnableInterrupts(LPTMR0, kLPTMR_TimerInterruptEnable);
+	EnableIRQ(LPTMR0_IRQn);
+    LPTMR_StartTimer(LPTMR0);
+
 	// Create Main thread (512 byte allocation from my_heap)
 	xTaskCreate(main_task, "Main_task", 0x200, NULL, main_task_PRIORITY, NULL);
 	// Create UART receive thread
-	xTaskCreate(UART__Receive, "UART Rx", 0x100, NULL, uart_task_PRIORITY, NULL);
+	//xTaskCreate(UART__Receive, "UART Rx", 0x100, NULL, uart_task_PRIORITY, NULL);
+	// Create IRDA receive thread
+	xTaskCreate(IRDA__Receive, "IRDA Rx", 0x200, NULL, irda_task_PRIORITY, NULL);
 	// start RTOS
 	vTaskStartScheduler();
 
@@ -117,11 +134,19 @@ void BOARD_InitPins(void)
     // Enable port clocks
     CLOCK_EnableClock(kCLOCK_PortB);
     CLOCK_EnableClock(kCLOCK_PortC);
+    CLOCK_EnableClock(kCLOCK_PortD);
     CLOCK_EnableClock(kCLOCK_PortE);
 
     // PORTE9-10 is configured for UART0 RX/TX
     PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_TX_PIN, kPORT_MuxAlt3);
-    PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_RX_PIN, kPORT_MuxAlt3);
+    //PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_RX_PIN, kPORT_MuxAlt3);
+
+    // PORTC3 is configured for CMP1_IN1 which is used as IRDA input
+    //PORT_SetPinMux(BOARD_IRDA_PORT, BOARD_IRDA_CMP1_PIN, kPORT_PinDisabledOrAnalog);
+    // PORTC3 is configured for UART1_RX which is used as IRDA input
+    //PORT_SetPinMux(BOARD_IRDA_PORT, BOARD_IRDA_CMP1_PIN, kPORT_MuxAlt3);
+    // PORTC3 is configured as GPIO
+    PORT_SetPinMux(BOARD_IRDA_PORT, BOARD_IRDA_CMP1_PIN, kPORT_MuxAsGpio);
 
     // PORTC5 (pin D8) is configured as GPIO (LED)
     PORT_SetPinMux(BOARD_LED_PORT, BOARD_LED_PIN, kPORT_MuxAsGpio);
@@ -254,3 +279,8 @@ void BOARD_InitPins(void)
                   | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX));
 }
 
+void LPTMR0_IRQHandler(void)
+{
+    LPTMR_ClearStatusFlags(LPTMR0, kLPTMR_TimerCompareFlag);
+    GPIO_PortToggle(BOARD_LED_GPIO, 1<<BOARD_LED_PIN);
+}
