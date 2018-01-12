@@ -13,7 +13,7 @@
 
 #define player_main_task_PRIORITY (configMAX_PRIORITIES - 2)
 #define PLAYER_QUEUE_ITEMS   5
-#define PLAYER_QUEUE_TYPE    sizeof(uint32_t)
+#define PLAYER_QUEUE_TYPE    (2*sizeof(uint32_t))
 #define PLAYER_MAX_SHUFFLE   256  // greater than this, shuffle=random
 #define PLAYER_CHAR_WIDTH    18   // 2 extra
 #define PLAYER_FLASH_TAG     0xAA550003 // AA55 followed by version number of params
@@ -29,14 +29,32 @@
 
 // Amount of heap in bytes to allocate to directory tree
 #define PLAYER_DIR_TREE_HEAP   131076  // 128k
-typedef enum
-{
-    PLAYER_TASK_ENT_SELECTOR,
-    PLAYER_TASK_ENT_PLAYBACK,
 
+#define PLAYER_TASK_RMT_REPEAT   0x00000000
+#define PLAYER_TASK_ENT_SELECTOR 0x00000001
+#define PLAYER_TASK_ENT_PLAYBACK 0x00000002
+#define PLAYER_TASK_RMT_POWER    0xba45ff00
+#define PLAYER_TASK_RMT_FUNC     0xb847ff00
+#define PLAYER_TASK_RMT_EQ       0xe619ff00
+#define PLAYER_TASK_RMT_REPT     0xf20dff00
+#define PLAYER_TASK_RMT_PLAY     0xbf40ff00
+#define PLAYER_TASK_RMT_PREV     0xbb44ff00
+#define PLAYER_TASK_RMT_NEXT     0xbc43ff00
+#define PLAYER_TASK_RMT_DOWN     0xf807ff00
+#define PLAYER_TASK_RMT_UP       0xf609ff00
+#define PLAYER_TASK_RMT_VOLUP    0xb946ff00
+#define PLAYER_TASK_RMT_VOLDN    0xea15ff00
+#define PLAYER_TASK_RMT_1        0xf30cff00
+#define PLAYER_TASK_RMT_2        0xe718ff00
+#define PLAYER_TASK_RMT_3        0xa15eff00
+#define PLAYER_TASK_RMT_4        0xf708ff00
+#define PLAYER_TASK_RMT_5        0xe31cff00
+#define PLAYER_TASK_RMT_6        0xa55aff00
+#define PLAYER_TASK_RMT_7        0xbd42ff00
+#define PLAYER_TASK_RMT_8        0xad52ff00
+#define PLAYER_TASK_RMT_9        0xb54aff00
+#define PLAYER_TASK_RMT_0        0xe916ff00
 
-
-} PlayerTasks_t;
 
 typedef enum
 {
@@ -107,6 +125,7 @@ typedef struct
 } PlayerParams_t;
 
 void player_task(void *handle);
+void player_queueTask(uint32_t task, uint32_t param);
 
 #endif /* SOURCE_INC_PLAYER_H_ */
 /*

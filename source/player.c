@@ -36,9 +36,10 @@ static void player_skipNFiles(TCHAR *dirPath, uint16_t n, FILINFO *fInfo);
 
 void player_task(void *handle)
 {
-    PlayerTasks_t  task;
+    uint32_t       task[2];
     uint32_t       tag[2];
     status_t       status;
+    char           text[64];
 
     dflashBlockBase = 0;
     dflashTotalSize = 0;
@@ -109,14 +110,16 @@ void player_task(void *handle)
     switch (playerInfo.mode)
     {
         case PLAYER_MODE_NONE:
-            task = PLAYER_TASK_ENT_SELECTOR;
-            xQueueSend(taskQueue, &task, 0);
+            task[0] = PLAYER_TASK_ENT_SELECTOR;
+            task[1] = 0;
+            xQueueSend(taskQueue, task, 0);
             break;
         case PLAYER_MODE_ALBUM:
         case PLAYER_MODE_ARTIST:
         case PLAYER_MODE_PLAYLIST:
-            task = PLAYER_TASK_ENT_PLAYBACK;
-            xQueueSend(taskQueue, &task, 0);
+            task[0] = PLAYER_TASK_ENT_PLAYBACK;
+            task[1] = 0;
+            xQueueSend(taskQueue, task, 0);
             break;
     }
 
@@ -124,7 +127,9 @@ void player_task(void *handle)
     {
         // *** THIS IS THE PLAYER UI TASK PROCESSING LOOP
         xQueueReceive(taskQueue, &task, portMAX_DELAY);
-        switch (task)
+        sprintf(text,"Command %08x, %08x\r\n", task[0], task[1]);
+        UART__SendASCII(text, UART_COLOR_MAGENTA);
+        switch (task[0])
         {
             case PLAYER_TASK_ENT_SELECTOR:
                 player_startSelector();
@@ -134,6 +139,15 @@ void player_task(void *handle)
                 break;
         }
     }
+}
+
+void player_queueTask(uint32_t task, uint32_t param)
+{
+    uint32_t t[2];
+    t[0] = task;
+    t[1] = param;
+    xQueueSend(taskQueue, t, 0);
+
 }
 
 static void player_startSelector(void)

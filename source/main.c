@@ -21,6 +21,7 @@
 #include "board.h"
 #include "clock_config.h"
 #include "uart.h"
+#include "irda.h"
 #include "sdcard.h"
 #include "player.h"
 
@@ -110,8 +111,6 @@ int main(void) {
 
 	// Create Main thread (512 byte allocation from my_heap)
 	xTaskCreate(main_task, "Main_task", 0x200, NULL, main_task_PRIORITY, NULL);
-	// Create UART receive thread
-	//xTaskCreate(UART__Receive, "UART Rx", 0x100, NULL, uart_task_PRIORITY, NULL);
 	// Create IRDA receive thread
 	xTaskCreate(IRDA__Receive, "IRDA Rx", 0x200, NULL, irda_task_PRIORITY, NULL);
 	// start RTOS
@@ -141,11 +140,7 @@ void BOARD_InitPins(void)
     PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_TX_PIN, kPORT_MuxAlt3);
     //PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_RX_PIN, kPORT_MuxAlt3);
 
-    // PORTC3 is configured for CMP1_IN1 which is used as IRDA input
-    //PORT_SetPinMux(BOARD_IRDA_PORT, BOARD_IRDA_CMP1_PIN, kPORT_PinDisabledOrAnalog);
-    // PORTC3 is configured for UART1_RX which is used as IRDA input
-    //PORT_SetPinMux(BOARD_IRDA_PORT, BOARD_IRDA_CMP1_PIN, kPORT_MuxAlt3);
-    // PORTC3 is configured as GPIO
+    // PORTC3 is configured as GPIO for IRDA input
     PORT_SetPinMux(BOARD_IRDA_PORT, BOARD_IRDA_CMP1_PIN, kPORT_MuxAsGpio);
 
     // PORTC5 (pin D8) is configured as GPIO (LED)
@@ -279,6 +274,7 @@ void BOARD_InitPins(void)
                   | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX));
 }
 
+// This is to toggle the on board Teensy LED
 void LPTMR0_IRQHandler(void)
 {
     LPTMR_ClearStatusFlags(LPTMR0, kLPTMR_TimerCompareFlag);

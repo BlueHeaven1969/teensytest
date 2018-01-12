@@ -64,20 +64,11 @@ extern "C" {
 #define BOARD_FTM_BASEADDR        FTM3
 #define BOARD_FTM_X_CHANNEL       0U
 #define BOARD_FTM_Y_CHANNEL       1U
-#define BOARD_FTM_PERIOD_HZ       100000
-#define BOARD_FTM_PERIOD_US       10
+#define BOARD_FTM_PERIOD_HZ       16000
+#define BOARD_FTM_PERIOD_TICKS    1875
 #define BOARD_FTM_IRQ_HANDLER     FTM3_IRQHandler
 #define BOARD_FTM_IRQ_VECTOR      FTM3_IRQn
 #define BOARD_FTM_SOURCE_CLOCK    (CLOCK_GetFreq(kCLOCK_BusClk)/4)
-
-// UART1 PARAMETERS
-#define BOARD_IRDA_UART_BAUDRATE  800
-#define BOARD_IRDA_UART_BASEADDR  UART1
-#define BOARD_IRDA_UART_INSTANCE  1U
-#define BOARD_IRDA_UART_CLKSRC    SYS_CLK
-#define BOARD_IRDA_UART_CLK_FREQ  CLOCK_GetCoreSysClkFreq()
-//#define BOARD_IRDA_IRQ            UART1_RX_TX_IRQn
-//#define BOARD_IRDA_IRQ_HANDLER    UART1_RX_TX_IRQHandler
 
 /* SDHC base address, clock and card detection pin */
 #define BOARD_SDHC_BASEADDR       SDHC
