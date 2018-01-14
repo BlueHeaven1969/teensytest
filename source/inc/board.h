@@ -3,8 +3,8 @@
  * will be overwritten if the respective MCUXpresso Config Tools is used to update this file.
  **********************************************************************************************************************/
 
-#ifndef _HW_CONFIG_H_
-#define _HW_CONFIG_H_
+#ifndef _BOARD_H_
+#define _BOARD_H_
 
 /***********************************************************************************************************************
  * Definitions
@@ -32,15 +32,17 @@ extern "C" {
 #endif
 
 // DEFINES =====================================================================
-// This is for the debug UART interface
-#define BOARD_UART0_PORT          PORTB
-#define BOARD_UART0_TX_PIN        17U
-#define BOARD_UART0_RX_PIN        16U
-
-// LED is on PORTC-05
+// ******** ON BOARD LED        ********
+// Pins -- PC05
 #define BOARD_LED_GPIO            GPIOC
 #define BOARD_LED_PORT            PORTC
 #define BOARD_LED_PIN             5U
+
+// ******** UART0 -- DEBUG UART ********
+// Pins -- PB17 (tx only)
+#define BOARD_UART0_PORT          PORTB
+#define BOARD_UART0_TX_PIN        17U
+#define BOARD_UART0_RX_PIN        16U
 
 // UART0 PARAMETERS
 #define BOARD_DEBUG_UART_BAUDRATE 115200
@@ -53,7 +55,8 @@ extern "C" {
 #define BOARD_UART_IRQ_HANDLER    UART0_RX_TX_IRQHandler
 #define SOPT5_UART0TXSRC_UART_TX  0x00u
 
-// This is for the debug IRDA interface
+// ******** IRDA INTERFACE  ********
+// Pins -- PD03
 #define BOARD_IRDA_PORT           PORTD
 #define BOARD_IRDA_GPIO           GPIOD
 #define BOARD_IRDA_CMP1_PIN       3U
@@ -70,12 +73,33 @@ extern "C" {
 #define BOARD_FTM_IRQ_VECTOR      FTM3_IRQn
 #define BOARD_FTM_SOURCE_CLOCK    (CLOCK_GetFreq(kCLOCK_BusClk)/4)
 
-/* SDHC base address, clock and card detection pin */
+// ******** SPI2 -- CHARACTER LCD ********
+// Pins -- PB20-22
+#define BOARD_SPI2_PORT           PORTB
+#define BOARD_SPI2_CS_PIN         20U
+#define BOARD_SPI2_CK_PIN         21U
+#define BOARD_SPI2_TX_PIN         22U
+
+// SPI2 PARAMETERS
+#define BOARD_SPI2_BASEADDR       SPI2
+#define BOARD_SPI2_BAUDRATE       100000U  // 100kHz max by spec
+#define BOARD_SPI2_PCS            kDSPI_Pcs0
+#define BOARD_SPI2_CLKSRC         DSPI2_CLK_SRC
+
+// DMA PARAMETERS
+#define BOARD_SPI2_DMA_MUX_BASE   DMAMUX
+#define BOARD_SPI2_DMA_MUX_SOURCE kDmaRequestMux0SPI2Tx
+#define BOARD_SPI2_DMA_BASE       DMA0
+
+// ******** SDCARD INTERFACE ********
+// SDHC base address, clock and card detection pin
 #define BOARD_SDHC_BASEADDR       SDHC
 #define BOARD_SDHC_CLKSRC         kCLOCK_CoreSysClk
 #define BOARD_SDHC_CLK_FREQ       CLOCK_GetFreq(kCLOCK_CoreSysClk)
 #define BOARD_SDHC_IRQ            SDHC_IRQn
-// SDHC_CD is PORTC-08
+
+// ******** SDCARD INSERT PIN ********
+// Pins PC08
 #define BOARD_SDHC_CD_GPIO_BASE   GPIOC
 #define BOARD_SDHC_CD_PORT_BASE   PORTC
 #define BOARD_SDHC_CD_GPIO_PIN    8U

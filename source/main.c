@@ -1,5 +1,23 @@
 /**
  * This is template for main module created by New Kinetis SDK 2.x Project Wizard. Enjoy!
+ *
+ * EXTERNAL CONNECTIONS TO TEENSY 3.6 BOARD:
+ * SDCard is onboard, connected to PTE0-5
+ * SDCard Insertion switch is on PTC8, pin 35 on Teensy
+ * Debug UART is on UART0, PTB17 (Tx Only), pin 1 on Teensy
+ * IRDA is on PTC3, pin 9 on Teensy
+ * Character LCD is on SPI2 (Tx only), PTB20-22, pins 43, 44, 46 on Teensy
+ * Graphic LCD is on SPI0 (Tx only), PTA14-16, pins 26, 27, 28 on Teensy
+ * Piano Audio is on ???
+ *
+ * POWER CONNECTIONS:
+ * Power provided by USB connection on Teensy
+ * Debug UART powered externally
+ * IRDA powered from 3.3V
+ * Character LCD powered from 5.0V
+ * Graphic LCD powered from 3.3V
+ * Piano Audio powered from ?.?V
+ *
  **/
 // INCLUDES
 
@@ -24,6 +42,7 @@
 #include "irda.h"
 #include "sdcard.h"
 #include "player.h"
+#include "clcd.h"
 
 // DEFINES  ====================================================================
 /* Task priorities. */
@@ -100,6 +119,9 @@ int main(void) {
 	// *** IRDA -- Infrared receiver
 	IRDA__Init();
 
+    // *** SPI2 -- Character LCD
+    CLCD_Init();
+
 	// Set up simple timer for LED
 	LPTMR_GetDefaultConfig(&lptmrConfig);
 	LPTMR_Init(LPTMR0, &lptmrConfig);
@@ -136,7 +158,7 @@ void BOARD_InitPins(void)
     CLOCK_EnableClock(kCLOCK_PortD);
     CLOCK_EnableClock(kCLOCK_PortE);
 
-    // PORTE9-10 is configured for UART0 RX/TX
+    // PORTB17 is configured for UART0 RX/TX
     PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_TX_PIN, kPORT_MuxAlt3);
     //PORT_SetPinMux(BOARD_UART0_PORT, BOARD_UART0_RX_PIN, kPORT_MuxAlt3);
 
@@ -145,6 +167,11 @@ void BOARD_InitPins(void)
 
     // PORTC5 (pin D8) is configured as GPIO (LED)
     PORT_SetPinMux(BOARD_LED_PORT, BOARD_LED_PIN, kPORT_MuxAsGpio);
+
+    // PORTB20-22 configured as SPI2
+    PORT_SetPinMux(BOARD_SPI2_PORT, BOARD_SPI2_CS_PIN, kPORT_MuxAlt2);
+    PORT_SetPinMux(BOARD_SPI2_PORT, BOARD_SPI2_CK_PIN, kPORT_MuxAlt2);
+    PORT_SetPinMux(BOARD_SPI2_PORT, BOARD_SPI2_TX_PIN, kPORT_MuxAlt2);
 
     const port_pin_config_t portd10_pinB3_config = {/* Internal pull-up resistor is enabled */
                                                     kPORT_PullUp,
