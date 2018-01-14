@@ -172,6 +172,7 @@ void BOARD_InitPins(void)
     PORT_SetPinMux(BOARD_SPI2_PORT, BOARD_SPI2_CS_PIN, kPORT_MuxAlt2);
     PORT_SetPinMux(BOARD_SPI2_PORT, BOARD_SPI2_CK_PIN, kPORT_MuxAlt2);
     PORT_SetPinMux(BOARD_SPI2_PORT, BOARD_SPI2_TX_PIN, kPORT_MuxAlt2);
+    PORT_SetPinMux(BOARD_SPI2_PORT, BOARD_SPI2_RX_PIN, kPORT_MuxAlt2);
 
     const port_pin_config_t portd10_pinB3_config = {/* Internal pull-up resistor is enabled */
                                                     kPORT_PullUp,

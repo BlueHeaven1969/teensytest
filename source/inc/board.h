@@ -79,16 +79,19 @@ extern "C" {
 #define BOARD_SPI2_CS_PIN         20U
 #define BOARD_SPI2_CK_PIN         21U
 #define BOARD_SPI2_TX_PIN         22U
+#define BOARD_SPI2_RX_PIN         23U
 
 // SPI2 PARAMETERS
 #define BOARD_SPI2_BASEADDR       SPI2
-#define BOARD_SPI2_BAUDRATE       100000U  // 100kHz max by spec
+#define BOARD_SPI2_BAUDRATE       50000U  // 100kHz max by spec
 #define BOARD_SPI2_PCS            kDSPI_Pcs0
-#define BOARD_SPI2_CLKSRC         DSPI2_CLK_SRC
+#define BOARD_SPI2_MASTER_PCS     kDSPI_MasterPcs0
+#define BOARD_SPI2_CLKSRC         (CLOCK_GetFreq(DSPI2_CLK_SRC))
 
 // DMA PARAMETERS
 #define BOARD_SPI2_DMA_MUX_BASE   DMAMUX
 #define BOARD_SPI2_DMA_MUX_SOURCE kDmaRequestMux0SPI2Tx
+#define BOARD_SPI2_DMA_RX_SOURCE  kDmaRequestMux0SPI2Rx
 #define BOARD_SPI2_DMA_BASE       DMA0
 
 // ******** SDCARD INTERFACE ********

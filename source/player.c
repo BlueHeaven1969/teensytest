@@ -17,6 +17,7 @@
 #include "uart.h"
 #include "strconv.h"
 #include "player.h"
+#include "clcd.h"
 
 static PlayerParams_t playerInfo;
 static flash_config_t s_flashDriver;
@@ -122,6 +123,8 @@ void player_task(void *handle)
             xQueueSend(taskQueue, task, 0);
             break;
     }
+
+    CLCD_PrintLine("Hello World!", 0, 0);
 
     while(1)
     {

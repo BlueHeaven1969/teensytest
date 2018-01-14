@@ -10,7 +10,7 @@ CPY := arm-none-eabi-objcopy
 SIZ := arm-none-eabi-size
 
 # OUTPUTS
-ELF_OUT         := teensy_text.elf
+ELF_OUT         := teensy_test.elf
 HEX_OUT         := teensy_test.hex
 SIZ_OUT         := teensy_test.siz
 OUTPUT_DBG_DIR  := .build/debug/
