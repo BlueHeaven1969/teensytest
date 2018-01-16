@@ -10,7 +10,7 @@
 
 #include "ff.h"
 
-#include "uart.h"
+#include "drv_uart.h"
 #include "strconv.h"
 #include "player.h"
 

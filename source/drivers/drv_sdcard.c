@@ -4,8 +4,10 @@
  *  Created on: Jan 6, 2018
  *      Author: rsp
  */
+// System
 #include <stdio.h>
 
+// FreeRTOS
 #include "FreeRTOS.h"
 #include "fsl_sd.h"
 #include "ff.h"
@@ -13,9 +15,10 @@
 #include "fsl_sd_disk.h"
 #include "fsl_flash.h"
 
+// Project
 #include "board.h"
-#include "uart.h"
-#include "sdcard.h"
+#include "drv_uart.h"
+#include "drv_sdcard.h"
 
 
 // LOCAL VARIABLES

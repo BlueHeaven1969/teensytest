@@ -17,13 +17,32 @@ OUTPUT_DBG_DIR  := .build/debug/
 OUTPUT_REL_DIR  := .build/release/
 
 # FLAGS
-X_FLAGS := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16  
-X_FLAGS += -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wall
-S_FLAGS += -x assembler-with-cpp
+X_FLAGS := \
+-mcpu=cortex-m4 \
+-mthumb \
+-mfloat-abi=hard \
+-mfpu=fpv4-sp-d16 \
+-fmessage-length=0 \
+-fsigned-char \
+-ffunction-sections \
+-fdata-sections \
+-Wall
+
+S_FLAGS := -x assembler-with-cpp
+
 C_FLAGS := -std=gnu99
+
 C_DEBUG_FLAGS := -O0 -g3
+
 C_RELEASE_FLAGS := -Os
-LD_FLAGS := -T "MK66FX1M0xxx18_flash.ld" -Xlinker --gc-sections --specs=nano.specs -specs=nosys.specs -Xlinker -z -Xlinker muldefs 
+
+LD_FLAGS := \
+-T "MK66FX1M0xxx18_flash.ld" \
+-Xlinker --gc-sections \
+-specs=nano.specs \
+-specs=nosys.specs \
+-Xlinker -z \
+-Xlinker muldefs 
 
 #DEFINES
 DEFINES := \
@@ -65,13 +84,13 @@ C_SRCS += \
 source/clock_config.c \
 source/fsl_sdmmc_event.c \
 source/fsl_sdmmc_host.c \
-source/irda.c \
 source/main.c \
 source/player.c \
-source/sdcard.c \
 source/strconv.c \
-source/uart.c \
-source/clcd.c \
+source/drivers/drv_irda.c \
+source/drivers/drv_sdcard.c \
+source/drivers/drv_uart.c \
+source/drivers/drv_clcd.c \
 freertos/source/croutine.c \
 freertos/source/event_groups.c \
 freertos/source/list.c \
@@ -106,98 +125,13 @@ SDK/drivers/fsl_uart.c \
 CMSIS/system_MK66F18.c 
 
 # OBJECT FILES
-OBJS += \
-$(OUTPUT_DIR)source/clock_config.o \
-$(OUTPUT_DIR)source/fsl_sdmmc_event.o \
-$(OUTPUT_DIR)source/fsl_sdmmc_host.o \
-$(OUTPUT_DIR)source/irda.o \
-$(OUTPUT_DIR)source/main.o \
-$(OUTPUT_DIR)source/player.o \
-$(OUTPUT_DIR)source/sdcard.o \
-$(OUTPUT_DIR)source/startup_MK66F18.o \
-$(OUTPUT_DIR)source/strconv.o \
-$(OUTPUT_DIR)source/uart.o \
-$(OUTPUT_DIR)source/clcd.o \
-$(OUTPUT_DIR)freertos/source/croutine.o \
-$(OUTPUT_DIR)freertos/source/event_groups.o \
-$(OUTPUT_DIR)freertos/source/list.o \
-$(OUTPUT_DIR)freertos/source/queue.o \
-$(OUTPUT_DIR)freertos/source/tasks.o \
-$(OUTPUT_DIR)freertos/source/timers.o \
-$(OUTPUT_DIR)freertos/portable/fsl_tickless_systick.o \
-$(OUTPUT_DIR)freertos/portable/heap_4.o \
-$(OUTPUT_DIR)freertos/portable/port.o \
-$(OUTPUT_DIR)SDK/sdmmc/fsl_sd.o \
-$(OUTPUT_DIR)SDK/sdmmc/fsl_sdmmc_common.o \
-$(OUTPUT_DIR)SDK/fatfs/diskio.o \
-$(OUTPUT_DIR)SDK/fatfs/ff.o \
-$(OUTPUT_DIR)SDK/fatfs/freertos_syscall.o \
-$(OUTPUT_DIR)SDK/fatfs/fsl_sd_disk.o \
-$(OUTPUT_DIR)SDK/fatfs/unicode.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_clock.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_common.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_dmamux.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_dspi_edma.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_dspi.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_edma.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_flash.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_ftm.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_gpio.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_lptmr.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_lpuart.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_sdhc.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_smc.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_sysmpu.o \
-$(OUTPUT_DIR)SDK/drivers/fsl_uart.o \
-$(OUTPUT_DIR)CMSIS/system_MK66F18.o 
+OBJS += $(patsubst %.c,$(OUTPUT_DIR)%.o,$(C_SRCS))
+OBJS += $(patsubst %.S,$(OUTPUT_DIR)%.o,$(S_SRCS))
 
 # DEPENDENCY FILES
-C_DEPS += \
-$(OUTPUT_DIR)source/clock_config.d \
-$(OUTPUT_DIR)source/fsl_sdmmc_event.d \
-$(OUTPUT_DIR)source/fsl_sdmmc_host.d \
-$(OUTPUT_DIR)source/irda.d \
-$(OUTPUT_DIR)source/main.d \
-$(OUTPUT_DIR)source/player.d \
-$(OUTPUT_DIR)source/sdcard.d \
-$(OUTPUT_DIR)source/strconv.d \
-$(OUTPUT_DIR)source/uart.d \
-$(OUTPUT_DIR)source/clcd.d \
-$(OUTPUT_DIR)freertos/source/croutine.d \
-$(OUTPUT_DIR)freertos/source/event_groups.d \
-$(OUTPUT_DIR)freertos/source/list.d \
-$(OUTPUT_DIR)freertos/source/queue.d \
-$(OUTPUT_DIR)freertos/source/tasks.d \
-$(OUTPUT_DIR)freertos/source/timers.d \
-$(OUTPUT_DIR)freertos/portable/fsl_tickless_systick.d \
-$(OUTPUT_DIR)freertos/portable/heap_4.d \
-$(OUTPUT_DIR)freertos/portable/port.d \
-$(OUTPUT_DIR)SDK/sdmmc/fsl_sd.d \
-$(OUTPUT_DIR)SDK/sdmmc/fsl_sdmmc_common.d \
-$(OUTPUT_DIR)SDK/fatfs/diskio.d \
-$(OUTPUT_DIR)SDK/fatfs/ff.d \
-$(OUTPUT_DIR)SDK/fatfs/freertos_syscall.d \
-$(OUTPUT_DIR)SDK/fatfs/fsl_sd_disk.d \
-$(OUTPUT_DIR)SDK/fatfs/unicode.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_clock.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_common.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_dmamux.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_dspi_edma.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_dspi.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_edma.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_flash.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_ftm.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_gpio.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_lptmr.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_lpuart.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_sdhc.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_smc.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_sysmpu.d \
-$(OUTPUT_DIR)SDK/drivers/fsl_uart.d \
-$(OUTPUT_DIR)CMSIS/system_MK66F18.d 
+C_DEPS := $(patsubst %.o,%.d,$(OBJS))
 
-S_DEPS += \
-$(OUTPUT_DIR)source/startup_MK66F18.d 
+S_DEPS := $(patsubst %.S,$(OUTPUT_DIR)%.d,$(S_SRCS))
 
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(strip $(S_DEPS)),)

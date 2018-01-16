@@ -5,8 +5,8 @@
  *      Author: rsp
  */
 
-#ifndef SOURCE_INC_SDCARD_H_
-#define SOURCE_INC_SDCARD_H_
+#ifndef _DRV_SDCARD_H_
+#define _DRV_SDCARD_H_
 
 typedef struct
 {

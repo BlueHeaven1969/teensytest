@@ -1,22 +1,27 @@
 /*
    Character LCD
 */
+// System Includes
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/param.h>
 
+// FreeRTOS
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "timers.h"
+
+// SDK
 #include "fsl_dmamux.h"
 #include "fsl_dspi.h"
 #include "fsl_dspi_edma.h"
 #include "fsl_edma.h"
 
+// Project
 #include "board.h"
-#include "clcd.h"
+#include "drv_clcd.h"
 
 // PROTOTYPES
 void CLCD_MasterUserCallback(SPI_Type *base, dspi_master_edma_handle_t *handle, 

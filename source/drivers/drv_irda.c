@@ -4,21 +4,26 @@
  *  Created on: Jan 11, 2018
  *      Author: rsp
  */
+// System
 #include <stdio.h>
 
+// FreeRTOS
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "timers.h"
+
+// SDK
 #include "fsl_gpio.h"
 #include "fsl_port.h"
 #include "fsl_ftm.h"
 #include "ff.h"
 
+// Project
 #include "board.h"
 #include "player.h"
 #include "strconv.h"
-#include "irda.h"
+#include "drv_irda.h"
 
 #define IRDA_PULSE0_HIGH   147
 #define IRDA_PULSE0_LOW    141

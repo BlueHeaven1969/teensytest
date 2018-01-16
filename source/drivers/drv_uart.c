@@ -4,21 +4,25 @@
  *  Created on: Jan 6, 2018
  *      Author: rsp
  */
-// INCLUDES
+// System
 #include <stdio.h>
 
+// FreeRTOS
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "timers.h"
+
+// SDK
 #include "fsl_uart.h"
 #include "fsl_gpio.h"
 #include "fsl_port.h"
 #include "ff.h"
 
+// Project
 #include "board.h"
 #include "strconv.h"
-#include "uart.h"
+#include "drv_uart.h"
 
 
 // FUNCTIONS

@@ -6,9 +6,19 @@
  * SDCard Insertion switch is on PTC8, pin 35 on Teensy
  * Debug UART is on UART0, PTB17 (Tx Only), pin 1 on Teensy
  * IRDA is on PTC3, pin 9 on Teensy
- * Character LCD is on SPI2 (Tx only), PTB20-22, pins 43, 44, 46 on Teensy
+ * Character LCD is on I2C0, PTD2-3, pins 7, 8 on Teensy
+ * Character LCD GPIO for backlight is on PTD4, pin 6 on Teensy
  * Graphic LCD is on SPI0 (Tx only), PTA14-16, pins 26, 27, 28 on Teensy
- * Piano Audio is on ???
+ * Graphic LCD GPIO for Cmd/Data is on PTB18, pin 29 on Teensy
+ * Graphic LCD GPIO for Reset is on PTB19, Pin 30 on Teensy
+ * Piano Audio is on I2C1, PTC10-11, pins 37, 38 on Teensy
+ * Piano Audio is on I2S0, MCLK on PTA17, pin 39 on Teensy
+ *                         BCLK on PTA5,  pin 25 on Teensy
+ *                         FCLK on PTC2,  pin 23 on Teensy
+ *                         TXD0 on PTC1,  pin 22 on Teensy
+ * Piano Audio GPIO for Mute is on PTB2, pin 19 on Teensy
+ * Piano Audio GPIO for Amp Shutdown is on PTB3, pin 18 on Teensy
+ * RGB LED is on PTD0, PTA12-13, pins 2, 3, 4 on Teensy
  *
  * POWER CONNECTIONS:
  * Power provided by USB connection on Teensy
@@ -16,7 +26,7 @@
  * IRDA powered from 3.3V
  * Character LCD powered from 5.0V
  * Graphic LCD powered from 3.3V
- * Piano Audio powered from ?.?V
+ * Piano Audio powered from 5.0V
  *
  **/
 // INCLUDES
@@ -38,11 +48,11 @@
 // Project includes
 #include "board.h"
 #include "clock_config.h"
-#include "uart.h"
-#include "irda.h"
-#include "sdcard.h"
+#include "drv_uart.h"
+#include "drv_irda.h"
+#include "drv_sdcard.h"
 #include "player.h"
-#include "clcd.h"
+#include "drv_clcd.h"
 
 // DEFINES  ====================================================================
 /* Task priorities. */
@@ -101,47 +111,47 @@ int main(void) {
     gpio_pin_config_t led_config = { kGPIO_DigitalOutput, 0 };
     lptmr_config_t lptmrConfig;
 
-	// Initialize low level hardware
-	BOARD_InitPins();
-	BOARD_BootClockRUN();
-	SYSMPU_Enable(SYSMPU, false);
+    // Initialize low level hardware
+    BOARD_InitPins();
+    BOARD_BootClockRUN();
+    SYSMPU_Enable(SYSMPU, false);
 
-	// Initialize peripherals
-	// *** UART -- debugging UART (UART0)
-	UART__Init();
+    // Initialize peripherals
+    // *** UART -- debugging UART (UART0)
+    UART__Init();
 
-	// *** GPIO -- on board LED
-	GPIO_PinInit(BOARD_LED_GPIO, BOARD_LED_PIN, &led_config);
+    // *** GPIO -- on board LED
+    GPIO_PinInit(BOARD_LED_GPIO, BOARD_LED_PIN, &led_config);
 
-	// *** SDHC -- SDCARD
-	SDCARD__Init();
+    // *** SDHC -- SDCARD
+    SDCARD__Init();
 
-	// *** IRDA -- Infrared receiver
-	IRDA__Init();
+    // *** IRDA -- Infrared receiver
+    IRDA__Init();
 
     // *** SPI2 -- Character LCD
     CLCD_Init();
 
-	// Set up simple timer for LED
-	LPTMR_GetDefaultConfig(&lptmrConfig);
-	LPTMR_Init(LPTMR0, &lptmrConfig);
-	LPTMR_SetTimerPeriod(LPTMR0, USEC_TO_COUNT(500000U,
-	                             CLOCK_GetFreq(kCLOCK_LpoClk)));
-	LPTMR_EnableInterrupts(LPTMR0, kLPTMR_TimerInterruptEnable);
-	EnableIRQ(LPTMR0_IRQn);
+    // Set up simple timer for LED
+    LPTMR_GetDefaultConfig(&lptmrConfig);
+    LPTMR_Init(LPTMR0, &lptmrConfig);
+    LPTMR_SetTimerPeriod(LPTMR0, USEC_TO_COUNT(500000U,
+                                 CLOCK_GetFreq(kCLOCK_LpoClk)));
+    LPTMR_EnableInterrupts(LPTMR0, kLPTMR_TimerInterruptEnable);
+    EnableIRQ(LPTMR0_IRQn);
     LPTMR_StartTimer(LPTMR0);
 
-	// Create Main thread (512 byte allocation from my_heap)
-	xTaskCreate(main_task, "Main_task", 0x200, NULL, main_task_PRIORITY, NULL);
-	// Create IRDA receive thread
-	xTaskCreate(IRDA__Receive, "IRDA Rx", 0x200, NULL, irda_task_PRIORITY, NULL);
-	// start RTOS
-	vTaskStartScheduler();
+    // Create Main thread (512 byte allocation from my_heap)
+    xTaskCreate(main_task, "Main_task", 0x200, NULL, main_task_PRIORITY, NULL);
+    // Create IRDA receive thread
+    xTaskCreate(IRDA__Receive, "IRDA Rx", 0x200, NULL, irda_task_PRIORITY, NULL);
+    // start RTOS
+    vTaskStartScheduler();
 
-	for(;;)
-	{ /* Infinite loop to avoid leaving the main function */
-		__asm("NOP"); /* something to use as a breakpoint stop while looping */
-	}
+    for(;;)
+    { /* Infinite loop to avoid leaving the main function */
+        __asm("NOP"); /* something to use as a breakpoint stop while looping */
+    }
 }
 
 /* FUNCTION ************************************************************************************************************

@@ -8,7 +8,7 @@
 #ifndef SOURCE_INC_STRCONV_H_
 #define SOURCE_INC_STRCONV_H_
 #include "ff.h"
-#include "uart.h"
+#include "drv_uart.h"
 #include "player.h"
 
 #define MAX_STRLEN    300

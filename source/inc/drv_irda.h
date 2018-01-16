@@ -5,8 +5,8 @@
  *      Author: rsp
  */
 
-#ifndef SOURCE_INC_IRDA_H_
-#define SOURCE_INC_IRDA_H_
+#ifndef _DRV_IRDA_H_
+#define _DRV_IRDA_H_
 
 #define irda_task_PRIORITY (configMAX_PRIORITIES - 3)
 

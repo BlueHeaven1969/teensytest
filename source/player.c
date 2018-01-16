@@ -14,10 +14,10 @@
 #include "fsl_flash.h"
 #include "ff.h"
 
-#include "uart.h"
+#include "drv_uart.h"
 #include "strconv.h"
 #include "player.h"
-#include "clcd.h"
+#include "drv_clcd.h"
 
 static PlayerParams_t playerInfo;
 static flash_config_t s_flashDriver;
